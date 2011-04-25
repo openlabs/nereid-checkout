@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+        This file is part of Nereid. The COPYRIGHT file at the
+        top level of this repository contains the full copyright notices
+        and license terms.
+    -->
+<tryton>
+    <data>
+
+        <record model="ir.ui.view" id="checkout_view_form">
+            <field name="model">nereid.checkout</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <![CDATA[
+                <form string="Checkout">
+                    <label name="name" />
+                    <field name="name" />
+                    <label name="model" />
+                    <field name="model" />
+                    <label name="active" />
+                    <field name="active" />
+                    <label name="is_allowed_for_guest" />
+                    <field name="is_allowed_for_guest" />
+                </form>
+                ]]>
+            </field>
+        </record> 
+
+        <record model="ir.ui.view" id="checkout_view_tree">
+            <field name="model">nereid.checkout</field>
+            <field name="type">tree</field>
+            <field name="arch" type="xml">
+                <![CDATA[
+                <tree string="Checkout">
+                    <field name="name" />
+                    <field name="model" />
+                    <field name="active" />
+                    <field name="is_allowed_for_guest" />
+                </tree>
+                ]]>
+            </field>
+        </record>
+        
+        <record model="ir.action.act_window" id="act_checkout_form">
+            <field name="name">checkout</field>
+            <field name="res_model">nereid.checkout</field>
+            <field name="view_type">form</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_checkout_form_view1">
+            <field name="sequence" eval="10" />
+            <field name="view" ref="checkout_view_tree" />
+            <field name="act_window" ref="act_checkout_form" />
+        </record>
+        <record model="ir.action.act_window.view" id="act_checkout_form_view2">
+            <field name="sequence" eval="20" />
+            <field name="view" ref="checkout_view_form" />
+            <field name="act_window" ref="act_checkout_form" />
+        </record>
+
+        <menuitem parent="nereid.menu_nereid_configuration" 
+          action="act_checkout_form"
+          id="menu_checkout_tree" />
+
+    </data>
+</tryton>
