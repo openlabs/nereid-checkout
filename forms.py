@@ -45,7 +45,7 @@ class CheckoutMethodForm(Form):
     """
     username = TextField('Username', _REQD)
     password = PasswordField('Password', _REQD)
-    
+
 
 class AddressForm(Form):
     "A Form resembling the res.partner.address"
@@ -77,7 +77,7 @@ class AddressChoiceForm(Form):
     '''The form allows to choose from an address
     or create a new one
     '''
-    address = SelectField('Select Address', 
+    address = SelectField('Select Address',
         choices=[('0', 'New Address')],
         coerce=int, validators=_REQD)
     new_address = FormField(AddressForm)

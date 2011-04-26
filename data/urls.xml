@@ -9,53 +9,18 @@
   
     <record id="checkout" model="nereid.url_rule">
         <field name="rule">/checkout</field>
-        <field name="endpoint">nereid.checkout.default.begin</field>
+        <field name="endpoint">nereid.checkout.default.checkout</field>
         <field name="sequence" eval="50" />
           <field name="methods">("GET", "POST")</field>
-        <field name="url_map" ref="nereid.default_url_map" />
-    </record>
-
-    <record id="submit" model="nereid.url_rule">
-        <field name="rule">/checkout-submit</field>
-        <field name="endpoint">nereid.checkout.default.submit</field>
-        <field name="methods">("POST",)</field>
-        <field name="sequence" eval="50" />
         <field name="url_map" ref="nereid.default_url_map" />
     </record>
 
     <record id="order" model="nereid.url_rule">
         <field name="rule">/order/&lt;int:id&gt;</field>
-        <field name="endpoint">sale.order.render</field>
+        <field name="endpoint">sale.sale.render</field>
         <field name="sequence" eval="50" />
         <field name="url_map" ref="nereid.default_url_map" />
     </record>
-
-    <record id="checkout_guest" model="nereid.url_rule">
-        <field name="rule">/checkout-guest</field>
-        <field name="endpoint">nereid.checkout.default._begin_guest</field>
-        <field name="sequence" eval="70" />
-        <field name="url_map" ref="nereid.default_url_map" />
-    </record>
-
-    <record id="checkout_regd" model="nereid.url_rule">
-        <field name="rule">/checkout-regd</field>
-        <field name="endpoint">nereid.checkout.default._begin</field>
-        <field name="sequence" eval="80" />
-          <field name="methods">("GET", "POST")</field>
-        <field name="url_map" ref="nereid.default_url_map" />
-    </record>
     
-    <!-- DEPRECIATED: May be used if required.
-
-    <record id="pre-checkout" model="nereid.url_rule">
-        <field name="rule">/pre-checkout</field>
-        <field name="endpoint">nereid.checkout.default._begin_checkout</field>
-        <field name="sequence" eval="90" />
-          <field name="methods">("GET", "POST")</field>
-        <field name="url_map" ref="nereid.default_url_map" />
-    </record>
-    
-    -->
-
   </data>
 </tryton>
