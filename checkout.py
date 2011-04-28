@@ -198,6 +198,11 @@ class DefaultCheckout(ModelSQL, ModelView):
         sale_obj = self.pool.get('sale.sale')
 
         cart = cart_obj.open_cart()
+        if not cart.sale:
+            # This case is possible if the user changes his currency at
+            # the point of checkout and the cart gets cleared.
+            return redirect(url_for('nereid.cart.view_cart'))
+
         sale = cart.sale
         if not cart.sale.lines:
             flash("Add some items to your cart before you checkout!")
