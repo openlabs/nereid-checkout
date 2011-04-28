@@ -3,4 +3,3 @@
 
 from .sale import *
 from .checkout import *
-from .testing import *
