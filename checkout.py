@@ -32,7 +32,7 @@ class Checkout(ModelSQL, ModelView):
 Checkout()
 
 
-class DefaultCheckout(ModelSQL, ModelView):
+class DefaultCheckout(ModelSQL):
     'Default checkout functionality'
     _name = 'nereid.checkout.default'
     _description = __doc__
@@ -60,7 +60,7 @@ class DefaultCheckout(ModelSQL, ModelView):
 
         return render_template('checkout.jinja', form=form, cart=cart)
 
-    def _process_shipment(self, request):
+    def _process_shipment(self, sale, form):
         """Process the shipment
 
         It is assumed that the form is validated before control
@@ -68,10 +68,13 @@ class DefaultCheckout(ModelSQL, ModelView):
         the form fields are accessed directly.
 
         Add a shipping line to the sale order.
+
+        :param sale: Browse Record of Sale Order
+        :param form: Instance of validated form
         """
         pass
 
-    def _process_payment(self):
+    def _process_payment(self, sale, form):
         """Process the payment
 
         It is assumed that the form is validated before control
@@ -79,7 +82,10 @@ class DefaultCheckout(ModelSQL, ModelView):
         the form fields are accessed directly.
 
 
-        The payment must be processed based on the following fields
+        The payment must be processed based on the following fields:
+
+        :param sale: Browse Record of Sale Order
+        :param form: Instance of validated form
         """
         pass
 
@@ -217,17 +223,18 @@ class DefaultCheckout(ModelSQL, ModelView):
             if do_process:
                 # Confirm the order
                 sale_obj.workflow_trigger_validate([cart.sale.id], 'quotation')
-                sale_obj.workflow_trigger_validate([cart.sale.id], 'confirm')
                 # Process Shipping
-                self._process_shipment(request)
+                self._process_shipment(cart.sale, form)
 
                 # Process Payment, if the returned value from the payment
                 # is a response object (isinstance) then return that instead
                 # of the success page. This will allow reidrects to a third 
                 # party gateway or service to collect payment.
-                response = self._process_payment()
+                response = self._process_payment(cart.sale, form)
                 if isinstance(response, BaseResponse):
                     return response
+
+                sale_obj.workflow_trigger_validate([cart.sale.id], 'confirm')
 
                 flash("Your order #%s has been processed" % sale.reference)
                 if request.is_guest_user:
