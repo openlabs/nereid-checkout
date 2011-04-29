@@ -221,8 +221,6 @@ class DefaultCheckout(ModelSQL):
             form, do_process = self._submit_guest() if request.is_guest_user \
                 else self._submit_registered()
             if do_process:
-                # Confirm the order
-                sale_obj.workflow_trigger_validate([cart.sale.id], 'quotation')
                 # Process Shipping
                 self._process_shipment(cart.sale, form)
 
@@ -234,6 +232,8 @@ class DefaultCheckout(ModelSQL):
                 if isinstance(response, BaseResponse):
                     return response
 
+                # Confirm the order
+                sale_obj.workflow_trigger_validate([cart.sale.id], 'quotation')
                 sale_obj.workflow_trigger_validate([cart.sale.id], 'confirm')
 
                 flash("Your order #%s has been processed" % sale.reference)
