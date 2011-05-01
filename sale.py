@@ -20,7 +20,7 @@ class Sale(ModelWorkflow, ModelSQL, ModelView):
     def render(self, id):
         "Render given invoice"
         sale = self.browse(id)
-        if sale.party.id != request.nereid_user.party_id:
+        if sale.party.id != request.nereid_user.party.id:
             abort(404)
         return render_template('sale-order.jinja', sale=sale)
 
