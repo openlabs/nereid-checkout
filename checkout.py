@@ -9,6 +9,7 @@
 """
 from nereid import render_template, request, url_for, flash, \
         redirect, login_required, abort
+from nereid.globals import request, current_app
 from werkzeug.wrappers import BaseResponse
 from trytond.model import ModelView, ModelSQL, fields
 
@@ -210,7 +211,7 @@ class DefaultCheckout(ModelSQL):
             return redirect(url_for('nereid.cart.view_cart'))
 
         sale = cart.sale
-        if not cart.sale.lines:
+        if not sale.lines:
             flash("Add some items to your cart before you checkout!")
             return redirect(url_for('nereid.website.home'))
         if request.method == 'GET':
@@ -222,19 +223,20 @@ class DefaultCheckout(ModelSQL):
                 else self._submit_registered()
             if do_process:
                 # Process Shipping
-                self._process_shipment(cart.sale, form)
+                self._process_shipment(sale, form)
 
                 # Process Payment, if the returned value from the payment
                 # is a response object (isinstance) then return that instead
                 # of the success page. This will allow reidrects to a third 
                 # party gateway or service to collect payment.
-                response = self._process_payment(cart.sale, form)
+                response = self._process_payment(sale, form)
                 if isinstance(response, BaseResponse):
                     return response
 
-                # Confirm the order
-                sale_obj.workflow_trigger_validate([cart.sale.id], 'quotation')
-                sale_obj.workflow_trigger_validate([cart.sale.id], 'confirm')
+                if sale.state == 'draft':
+                    # Confirm the order
+                    sale_obj.workflow_trigger_validate([sale.id], 'quotation')
+                    sale_obj.workflow_trigger_validate([sale.id], 'confirm')
 
                 flash("Your order #%s has been processed" % sale.reference)
                 if request.is_guest_user:
