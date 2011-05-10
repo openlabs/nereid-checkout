@@ -64,7 +64,7 @@ class TestCheckout(unittest.TestCase):
                 'category.jinja', ' ', cls.site)
 
             category = testing_proxy.create_product_category(
-                'Category', template=category_template, uri='category')
+                'Category', uri='category')
             stock_journal = journal_obj.search([('code', '=', 'STO')])[0]
             cls.product = testing_proxy.create_product(
                 'product 1', category,
@@ -75,7 +75,6 @@ class TestCheckout(unittest.TestCase):
                 cost_price = Decimal('5'),
                 account_expense = testing_proxy.get_account_by_kind('expense'),
                 account_revenue = testing_proxy.get_account_by_kind('revenue'),
-                nereid_template = product_template,
                 uri = 'product-1',
                 sale_uom = uom_obj.search([('name', '=', 'Unit')], limit=1)[0],
                 #account_journal_stock_input = stock_journal,
