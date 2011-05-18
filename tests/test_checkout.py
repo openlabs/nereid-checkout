@@ -25,6 +25,7 @@ class TestCheckout(unittest.TestCase):
         uom_obj = testing_proxy.pool.get('product.uom')
         journal_obj = testing_proxy.pool.get('account.journal')
         country_obj = testing_proxy.pool.get('country.country')
+        currency_obj = testing_proxy.pool.get('currency.currency')
 
         with Transaction().start(testing_proxy.db_name, 1, None) as txn:
             # Create company
@@ -44,10 +45,12 @@ class TestCheckout(unittest.TestCase):
             product_template = testing_proxy.create_template(
                 'product-list.jinja', ' ')
             cls.available_countries = country_obj.search([], limit=5)
+            cls.available_currencies = currency_obj.search([('code', '=', 'USD')])
             cls.site = testing_proxy.create_site('testsite.com', 
                 category_template = category_template,
                 product_template = product_template,
-                countries = [('set', cls.available_countries)])
+                countries = [('set', cls.available_countries)],
+                currencies = [('set', cls.available_currencies)])
 
             testing_proxy.create_template('home.jinja', ' Home ', cls.site)
             testing_proxy.create_template('checkout.jinja', 
@@ -99,13 +102,13 @@ class TestCheckout(unittest.TestCase):
         """Assert nothing broke the cart."""
         app = self.get_app()
         with app.test_client() as c:
-            rv = c.get('/cart')
+            rv = c.get('/en_US/cart')
             self.assertEqual(rv.status_code, 200)
 
-            c.post('/cart/add', data={
+            c.post('/en_US/cart/add', data={
                 'product': self.product, 'quantity': 5
                 })
-            rv = c.get('/cart')
+            rv = c.get('/en_US/cart')
             self.assertEqual(rv.status_code, 200)
 
         with Transaction().start(testing_proxy.db_name, testing_proxy.user, None):
@@ -119,19 +122,19 @@ class TestCheckout(unittest.TestCase):
         """Submit as guest and all invalids."""
         app = self.get_app()
         with app.test_client() as c:
-            c.post('/cart/add', data={
+            c.post('/en_US/cart/add', data={
                 'product': self.product, 'quantity': 5
                 })
-            rv = c.get('/checkout')
+            rv = c.get('/en_US/checkout')
             self.assertEqual(rv.status_code, 200)
 
-            rv = c.post('/checkout', data={})
+            rv = c.post('/en_US/checkout', data={})
             errors = literal_eval(rv.data)
             for field in ['payment_method', 'shipment_method', 
                     'new_billing_address', 'new_shipping_address']:
                 self.assertTrue(field in errors)
 
-            rv = c.post('/checkout', data={
+            rv = c.post('/en_US/checkout', data={
                 'new_billing_address-city': 'Delhi',
                 'shipping_same_as_billing': True,
                 'payment_method': 1,
@@ -151,13 +154,13 @@ class TestCheckout(unittest.TestCase):
             subdivision = country.subdivisions[0]
 
         with app.test_client() as c:
-            c.post('/cart/add', data={
+            c.post('/en_US/cart/add', data={
                 'product': self.product, 'quantity': 5
                 })
-            rv = c.get('/checkout')
+            rv = c.get('/en_US/checkout')
             self.assertEqual(rv.status_code, 200)
 
-            rv = c.post('/checkout', data={
+            rv = c.post('/en_US/checkout', data={
                 'new_billing_address-name'          : 'Name',
                 'new_billing_address-street'        : 'Street',
                 'new_billing_address-streetbis'     : 'Streetbis',
@@ -198,18 +201,18 @@ class TestCheckout(unittest.TestCase):
 
         app = self.get_app(DEBUG=True)
         with app.test_client() as c:
-            rv = c.post('/login', data={
+            rv = c.post('/en_US/login', data={
                 'email': 'email@example.com',
                 'password': 'password',
                 })
-            c.post('/cart/add', data={
+            c.post('/en_US/cart/add', data={
                 'product': self.product, 'quantity': 5
                 })
-            rv = c.get('/checkout')
+            rv = c.get('/en_US/checkout')
             self.assertEqual(rv.status_code, 200)
 
             # Totally invalid data
-            rv = c.post('/checkout', data={})
+            rv = c.post('/en_US/checkout', data={})
             errors = literal_eval(rv.data)
             self.assertTrue('payment_method' in errors)
             self.assertTrue('shipment_method' in errors)
@@ -217,7 +220,7 @@ class TestCheckout(unittest.TestCase):
             self.assertTrue('shipping_address' in errors)
 
             # Invalid but providing that new_address is to be validated
-            rv = c.post('/checkout', data={
+            rv = c.post('/en_US/checkout', data={
                 'billing_address': 0,
                 'shipping_same_as_billing': True
                 })
@@ -228,7 +231,7 @@ class TestCheckout(unittest.TestCase):
             self.assertTrue('shipping_address' not in errors)
 
             # Providing complete information
-            rv = c.post('/checkout', data={
+            rv = c.post('/en_US/checkout', data={
                 'billing_address'                   : regd_user_id,
                 'shipping_same_as_billing'          : True,
                 'shipment_method'                   : 1,
@@ -261,18 +264,18 @@ class TestCheckout(unittest.TestCase):
 
         app = self.get_app(DEBUG=True)
         with app.test_client() as c:
-            rv = c.post('/login', data={
+            rv = c.post('/en_US/login', data={
                 'email': 'email2@example.com',
                 'password': 'password2',
                 })
-            c.post('/cart/add', data={
+            c.post('/en_US/cart/add', data={
                 'product': self.product, 'quantity': 5
                 })
-            rv = c.get('/checkout')
+            rv = c.get('/en_US/checkout')
             self.assertEqual(rv.status_code, 200)
 
             # Totally invalid data
-            rv = c.post('/checkout', data={})
+            rv = c.post('/en_US/checkout', data={})
             errors = literal_eval(rv.data)
             self.assertTrue('payment_method' in errors)
             self.assertTrue('shipment_method' in errors)
@@ -280,7 +283,7 @@ class TestCheckout(unittest.TestCase):
             self.assertTrue('shipping_address' in errors)
 
             # Invalid but providing that new_address is to be validated
-            rv = c.post('/checkout', data={
+            rv = c.post('/en_US/checkout', data={
                 'billing_address': 0,
                 'shipping_same_as_billing': True
                 })
@@ -291,7 +294,7 @@ class TestCheckout(unittest.TestCase):
             self.assertTrue('shipping_address' not in errors)
 
             # Providing complete information
-            rv = c.post('/checkout', data={
+            rv = c.post('/en_US/checkout', data={
                 'billing_address'                   : 0,
                 'new_billing_address-name'          : 'Name',
                 'new_billing_address-street'        : 'Street',
@@ -334,18 +337,18 @@ class TestCheckout(unittest.TestCase):
 
         app = self.get_app(DEBUG=True)
         with app.test_client() as c:
-            rv = c.post('/login', data={
+            rv = c.post('/en_US/login', data={
                 'email': 'email3@example.com',
                 'password': 'password3',
                 })
-            c.post('/cart/add', data={
+            c.post('/en_US/cart/add', data={
                 'product': self.product, 'quantity': 5
                 })
-            rv = c.get('/checkout')
+            rv = c.get('/en_US/checkout')
             self.assertEqual(rv.status_code, 200)
 
             # Totally invalid data
-            rv = c.post('/checkout', data={})
+            rv = c.post('/en_US/checkout', data={})
             errors = literal_eval(rv.data)
             self.assertTrue('payment_method' in errors)
             self.assertTrue('shipment_method' in errors)
@@ -353,7 +356,7 @@ class TestCheckout(unittest.TestCase):
             self.assertTrue('shipping_address' in errors)
 
             # Invalid but providing that new_address is to be validated
-            rv = c.post('/checkout', data={
+            rv = c.post('/en_US/checkout', data={
                 'billing_address': 0,
                 'shipping_same_as_billing': True
                 })
@@ -364,7 +367,7 @@ class TestCheckout(unittest.TestCase):
             self.assertTrue('shipping_address' not in errors)
 
             # Providing complete information
-            rv = c.post('/checkout', data={
+            rv = c.post('/en_US/checkout', data={
                 'billing_address'                   : regd_user_id,
                 'shipping_same_as_billing'          : True,
                 'shipment_method'                   : 1,

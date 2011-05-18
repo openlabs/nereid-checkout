@@ -8,7 +8,7 @@
   <data noupdate="1">
   
     <record id="checkout" model="nereid.url_rule">
-        <field name="rule">/checkout</field>
+        <field name="rule">/&lt;language&gt;/checkout</field>
         <field name="endpoint">nereid.checkout.default.checkout</field>
         <field name="sequence" eval="50" />
           <field name="methods">("GET", "POST")</field>
@@ -16,7 +16,7 @@
     </record>
 
     <record id="order" model="nereid.url_rule">
-        <field name="rule">/order/&lt;int:id&gt;</field>
+        <field name="rule">/&lt;language&gt;/order/&lt;int:id&gt;</field>
         <field name="endpoint">sale.sale.render</field>
         <field name="sequence" eval="50" />
         <field name="url_map" ref="nereid.default_url_map" />
