@@ -242,7 +242,7 @@ class DefaultCheckout(ModelSQL):
                 if request.is_guest_user:
                     return redirect(url_for('nereid.website.home'))
                 else:
-                    return redirect(url_for('sale.sale.render', id=sale.id))
+                    return redirect(url_for('sale.sale.render', sale=sale.id))
 
             return render_template('checkout.jinja', form=form, cart=cart)
 

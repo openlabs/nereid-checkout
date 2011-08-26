@@ -16,11 +16,18 @@
     </record>
 
     <record id="order" model="nereid.url_rule">
-        <field name="rule">/&lt;language&gt;/order/&lt;int:id&gt;</field>
+        <field name="rule">/&lt;language&gt;/order/&lt;int:sale&gt;</field>
         <field name="endpoint">sale.sale.render</field>
         <field name="sequence" eval="50" />
         <field name="url_map" ref="nereid.default_url_map" />
     </record>
-    
+
+    <record id="sale_confirm" model="nereid.url_rule">
+        <field name="rule">/&lt;language&gt;/order/&lt;int:sale&gt;/&lt;confirmation&gt;</field>
+        <field name="endpoint">sale.sale.render</field>
+        <field name="sequence" eval="60" />
+        <field name="url_map" ref="nereid.default_url_map" />
+    </record>
+     
   </data>
 </tryton>
