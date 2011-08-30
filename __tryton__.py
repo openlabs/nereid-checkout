@@ -15,8 +15,8 @@
         ],
     'xml': [
         'checkout.xml',
-        'data/urls.xml',
-        'data/defaults.xml',
+        'urls.xml',
+        'defaults.xml',
         ],
     'translation': [
         ],
