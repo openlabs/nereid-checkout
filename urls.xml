@@ -28,6 +28,20 @@
         <field name="sequence" eval="60" />
         <field name="url_map" ref="nereid.default_url_map" />
     </record>
-     
+    
+    <record id="orders" model="nereid.url_rule">
+        <field name="rule">/&lt;language&gt;/orders</field>
+        <field name="endpoint">sale.sale.render_list</field>
+        <field name="sequence" eval="50" />
+        <field name="url_map" ref="nereid.default_url_map" />
+    </record>
+
+    <record id="orders_page" model="nereid.url_rule">
+        <field name="rule">/&lt;language&gt;/orders/&lt;int:page&gt;</field>
+        <field name="endpoint">sale.sale.render_list</field>
+        <field name="sequence" eval="50" />
+        <field name="url_map" ref="nereid.default_url_map" />
+    </record>
+
   </data>
 </tryton>

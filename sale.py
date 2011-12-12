@@ -9,12 +9,28 @@
 """
 from trytond.model import ModelSQL, ModelView, ModelWorkflow
 
-from nereid import render_template, request, abort
+from nereid import render_template, request, abort, session
+from nereid.helpers import Pagination
 
 
 class Sale(ModelWorkflow, ModelSQL, ModelView):
     """Add Render and Render list"""
     _name = 'sale.sale'
+
+    per_page = 10
+
+    def render_list(self, page=1):
+        """Render all orders
+        """
+        domain = [
+            ('party', '=', request.nereid_user.party.id),
+            ('state', '!=', 'draft'),
+            ]
+
+        # Handle order duration
+
+        sales = Pagination(self, domain, page, self.per_page)
+        return render_template('sales.jinja', sales=sales)
 
     def render(self, sale, confirmation=None):
         """Render given sale order
@@ -28,9 +44,12 @@ class Sale(ModelWorkflow, ModelSQL, ModelView):
         confirmation = False if confirmation is None else True
 
         sale = self.browse(sale)
-        if sale.party.id != request.nereid_user.party.id:
-            # TODO: Check if this works for guest user
-            abort(404)
+        if (not request.is_guest_user) and \
+                (sale.party.id != request.nereid_user.party.id):
+            abort(403)
+        elif request.is_guest_user and \
+                (sale.invoice_address.email.value != session.get('email')):
+            abort(403)
 
         return render_template(
             'sale.jinja', sale=sale, confirmation=confirmation)
