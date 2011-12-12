@@ -9,7 +9,8 @@
 """
 from trytond.model import ModelSQL, ModelView, ModelWorkflow
 
-from nereid import render_template, request, abort, session
+from nereid import render_template, request, abort
+from nereid.globals import session
 from nereid.helpers import Pagination
 
 
