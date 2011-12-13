@@ -38,6 +38,7 @@ class DefaultCheckout(ModelSQL):
     _name = 'nereid.checkout.default'
     _description = __doc__
 
+
     def _begin_guest(self):
         """Start of checkout process for guest user which is different
         from login user who may already have addresses
