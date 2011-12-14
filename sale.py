@@ -83,4 +83,19 @@ class Sale(ModelWorkflow, ModelSQL, ModelView):
         self.write(sale, {'guest_access_code': access_code})
         return access_code
 
+    def send_confirmation_email(self, sale):
+        """An email confirming that the order has been confirmed and that we 
+        are waiting for the payment confirmation if we are really waiting for 
+        it.
+
+        For setting a convention this email has to be sent by rendering the
+        templates
+
+           * Text: `emails/sale-confirmation-text.jinja`
+           * HTML: `emails/sale-confirmation-html.jinja`
+
+        :param sale: The ID of the sale order
+        """
+        pass
+
 Sale()
