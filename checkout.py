@@ -238,6 +238,7 @@ class DefaultCheckout(ModelSQL):
                     # Confirm the order
                     sale_obj.workflow_trigger_validate([sale.id], 'quotation')
                     sale_obj.workflow_trigger_validate([sale.id], 'confirm')
+                cart_obj.check_update_date(cart)
 
                 flash("Your order #%s has been processed" % sale.reference)
                 if request.is_guest_user:
