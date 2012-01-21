@@ -29,16 +29,16 @@ class TestCheckout(unittest.TestCase):
 
         with Transaction().start(testing_proxy.db_name, 1, None) as txn:
             # Create company
-            company = testing_proxy.create_company('Test Company')
-            testing_proxy.set_company_for_user(1, company)
+            cls.company = testing_proxy.create_company('Test Company')
+            testing_proxy.set_company_for_user(1, cls.company)
             # Create Fiscal Year
-            fiscal_year = testing_proxy.create_fiscal_year(company=company)
+            fiscal_year = testing_proxy.create_fiscal_year(company=cls.company)
             # Create Chart of Accounts
-            testing_proxy.create_coa_minimal(company)
+            testing_proxy.create_coa_minimal(cls.company)
             # Create payment term
             testing_proxy.create_payment_term()
 
-            cls.guest_user = testing_proxy.create_guest_user()
+            cls.guest_user = testing_proxy.create_guest_user(company=cls.company)
 
             category_template = testing_proxy.create_template(
                 'category-list.jinja', ' ')
@@ -54,7 +54,7 @@ class TestCheckout(unittest.TestCase):
 
             testing_proxy.create_template('home.jinja', ' Home ', cls.site)
             testing_proxy.create_template('checkout.jinja', 
-                '{{form.errors}}', cls.site)
+                '{{form.errors|safe}}', cls.site)
             testing_proxy.create_template(
                 'login.jinja', 
                 '{{ login_form.errors }} {{get_flashed_messages()}}', cls.site)
@@ -72,7 +72,6 @@ class TestCheckout(unittest.TestCase):
             cls.product = testing_proxy.create_product(
                 'product 1', category,
                 type = 'stockable',
-                # purchasable = True,
                 salable = True,
                 list_price = Decimal('10'),
                 cost_price = Decimal('5'),
@@ -193,7 +192,7 @@ class TestCheckout(unittest.TestCase):
         with Transaction().start(testing_proxy.db_name, 
                 testing_proxy.user, testing_proxy.context) as txn:
             regd_user_id = testing_proxy.create_user_party('Registered User', 
-                'email@example.com', 'password')
+                'email@example.com', 'password', company=self.company)
             regd_user = self.address_obj.browse(regd_user_id)
             party_id = regd_user.party.id
 
@@ -254,7 +253,7 @@ class TestCheckout(unittest.TestCase):
         with Transaction().start(testing_proxy.db_name, 
                 testing_proxy.user, testing_proxy.context) as txn:
             regd_user_id = testing_proxy.create_user_party('Registered User 2', 
-                'email2@example.com', 'password2')
+                'email2@example.com', 'password2', company=self.company)
             regd_user = self.address_obj.browse(regd_user_id)
             party_id = regd_user.party.id
             country = self.country_obj.browse(self.available_countries[0])
@@ -326,7 +325,7 @@ class TestCheckout(unittest.TestCase):
         with Transaction().start(testing_proxy.db_name, 
                 testing_proxy.user, testing_proxy.context) as txn:
             regd_user2_id = testing_proxy.create_user_party('Registered User 3', 
-                'email3@example.com', 'password3')
+                'email3@example.com', 'password3', company=self.company)
             regd_user_id = self.address_obj.search([('id', '!=', regd_user2_id)])[0]
             regd_user2 = self.address_obj.browse(regd_user_id)
             party_id = regd_user2.party.id
