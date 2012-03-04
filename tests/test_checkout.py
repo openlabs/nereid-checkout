@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #This file is part of Tryton.  The COPYRIGHT file at the top level of
 #this repository contains the full copyright notices and license terms.
-from ast import literal_eval
+import doctest
 from decimal import Decimal
 import unittest2 as unittest
 
@@ -10,16 +10,18 @@ CONFIG.options['db_type'] = 'sqlite'
 from trytond.modules import register_classes
 register_classes()
 
-from nereid.testing import testing_proxy
+from trytond.modules.nereid_checkout import forms
+from nereid.testing import testing_proxy, TestCase
 from trytond.transaction import Transaction
 
 
-class TestCheckout(unittest.TestCase):
+class TestCheckout(TestCase):
     """Test Checkout"""
 
     @classmethod
     def setUpClass(cls):
-        # Install module
+        super(TestCheckout, cls).setUpClass()
+
         testing_proxy.install_module('nereid_checkout')
 
         uom_obj = testing_proxy.pool.get('product.uom')
@@ -96,6 +98,7 @@ class TestCheckout(unittest.TestCase):
         self.sale_obj = testing_proxy.pool.get('sale.sale')
         self.country_obj = testing_proxy.pool.get('country.country')
         self.address_obj = testing_proxy.pool.get('party.address')
+        self.nereid_user_obj = testing_proxy.pool.get('nereid.user')
 
     def test_0010_check_cart(self):
         """Assert nothing broke the cart."""
@@ -128,20 +131,19 @@ class TestCheckout(unittest.TestCase):
             self.assertEqual(rv.status_code, 200)
 
             rv = c.post('/en_US/checkout', data={})
-            errors = literal_eval(rv.data)
+            # errors = json.loads(rv.data)
             for field in ['payment_method', 'shipment_method', 
                     'new_billing_address', 'new_shipping_address']:
-                self.assertTrue(field in errors)
+                self.assertTrue(field in rv.data)
 
             rv = c.post('/en_US/checkout', data={
                 'new_billing_address-city': 'Delhi',
                 'shipping_same_as_billing': True,
                 'payment_method': 1,
                  })
-            errors = literal_eval(rv.data)
             for field in ['shipment_method', 'new_billing_address']:
-                self.assertTrue(field in errors)
-            self.assertTrue('payment_method' not in errors)
+                self.assertTrue(field in rv.data)
+            self.assertTrue('payment_method' not in rv.data)
 
     def test_0030_guest_valid(self):
         """Submit as guest and all valid data."""
@@ -159,20 +161,21 @@ class TestCheckout(unittest.TestCase):
             rv = c.get('/en_US/checkout')
             self.assertEqual(rv.status_code, 200)
 
-            rv = c.post('/en_US/checkout', data={
-                'new_billing_address-name'          : 'Name',
-                'new_billing_address-street'        : 'Street',
-                'new_billing_address-streetbis'     : 'Streetbis',
-                'new_billing_address-zip'           : 'ZIP',
-                'new_billing_address-city'          : 'City',
-                'new_billing_address-email'         : 'email@example.com',
-                'new_billing_address-phone'         : '1234567',
-                'new_billing_address-country'       : country.id,
-                'new_billing_address-subdivision'   : subdivision.id,
-                'shipping_same_as_billing'          : True,
-                'shipment_method'                   : 1,
-                'payment_method'                    : 1,
-                })
+            data = {
+                'new_billing_address-name': 'Name',
+                'new_billing_address-street': 'Street',
+                'new_billing_address-streetbis': 'Streetbis',
+                'new_billing_address-zip': 'ZIP',
+                'new_billing_address-city': 'City',
+                'new_billing_address-email': 'email@example.com',
+                'new_billing_address-phone': '1234567',
+                'new_billing_address-country': country.id,
+                'new_billing_address-subdivision': subdivision.id,
+                'shipping_same_as_billing': 'Yes',
+                'shipment_method': 1,
+                'payment_method': 1,
+            }
+            rv = c.post('/en_US/checkout', data=data)
             self.assertEqual(rv.status_code, 302)
 
         with Transaction().start(testing_proxy.db_name, 
@@ -193,7 +196,8 @@ class TestCheckout(unittest.TestCase):
                 testing_proxy.user, testing_proxy.context) as txn:
             regd_user_id = testing_proxy.create_user_party('Registered User', 
                 'email@example.com', 'password', company=self.company)
-            regd_user = self.address_obj.browse(regd_user_id)
+            regd_user = self.nereid_user_obj.browse(regd_user_id)
+            address_id = regd_user.addresses[0].id
             party_id = regd_user.party.id
 
             txn.cursor.commit()
@@ -212,7 +216,7 @@ class TestCheckout(unittest.TestCase):
 
             # Totally invalid data
             rv = c.post('/en_US/checkout', data={})
-            errors = literal_eval(rv.data)
+            errors = rv.data
             self.assertTrue('payment_method' in errors)
             self.assertTrue('shipment_method' in errors)
             self.assertTrue('billing_address' in errors)
@@ -223,7 +227,7 @@ class TestCheckout(unittest.TestCase):
                 'billing_address': 0,
                 'shipping_same_as_billing': True
                 })
-            errors = literal_eval(rv.data)
+            errors = rv.data
             self.assertTrue('payment_method' in errors)
             self.assertTrue('shipment_method' in errors)
             self.assertTrue('new_billing_address' in errors)
@@ -231,7 +235,7 @@ class TestCheckout(unittest.TestCase):
 
             # Providing complete information
             rv = c.post('/en_US/checkout', data={
-                'billing_address'                   : regd_user_id,
+                'billing_address'                   : address_id,
                 'shipping_same_as_billing'          : True,
                 'shipment_method'                   : 1,
                 'payment_method'                    : 1,
@@ -250,11 +254,11 @@ class TestCheckout(unittest.TestCase):
 
     def test_0050_registered_with_new_address(self):
         """Sending full address to create with registered user"""
-        with Transaction().start(testing_proxy.db_name, 
+        with Transaction().start(testing_proxy.db_name,
                 testing_proxy.user, testing_proxy.context) as txn:
             regd_user_id = testing_proxy.create_user_party('Registered User 2', 
                 'email2@example.com', 'password2', company=self.company)
-            regd_user = self.address_obj.browse(regd_user_id)
+            regd_user = self.nereid_user_obj.browse(regd_user_id)
             party_id = regd_user.party.id
             country = self.country_obj.browse(self.available_countries[0])
             subdivision = country.subdivisions[0]
@@ -275,7 +279,7 @@ class TestCheckout(unittest.TestCase):
 
             # Totally invalid data
             rv = c.post('/en_US/checkout', data={})
-            errors = literal_eval(rv.data)
+            errors = rv.data
             self.assertTrue('payment_method' in errors)
             self.assertTrue('shipment_method' in errors)
             self.assertTrue('billing_address' in errors)
@@ -286,7 +290,7 @@ class TestCheckout(unittest.TestCase):
                 'billing_address': 0,
                 'shipping_same_as_billing': True
                 })
-            errors = literal_eval(rv.data)
+            errors = rv.data
             self.assertTrue('payment_method' in errors)
             self.assertTrue('shipment_method' in errors)
             self.assertTrue('new_billing_address' in errors)
@@ -324,7 +328,7 @@ class TestCheckout(unittest.TestCase):
         """Sending full address to create with registered user"""
         with Transaction().start(testing_proxy.db_name, 
                 testing_proxy.user, testing_proxy.context) as txn:
-            regd_user2_id = testing_proxy.create_user_party('Registered User 3', 
+            regd_user2_id = testing_proxy.create_user_party('Registered User 3',
                 'email3@example.com', 'password3', company=self.company)
             regd_user_id = self.address_obj.search([('id', '!=', regd_user2_id)])[0]
             regd_user2 = self.address_obj.browse(regd_user_id)
@@ -348,7 +352,7 @@ class TestCheckout(unittest.TestCase):
 
             # Totally invalid data
             rv = c.post('/en_US/checkout', data={})
-            errors = literal_eval(rv.data)
+            errors = rv.data
             self.assertTrue('payment_method' in errors)
             self.assertTrue('shipment_method' in errors)
             self.assertTrue('billing_address' in errors)
@@ -359,7 +363,7 @@ class TestCheckout(unittest.TestCase):
                 'billing_address': 0,
                 'shipping_same_as_billing': True
                 })
-            errors = literal_eval(rv.data)
+            errors = rv.data
             self.assertTrue('payment_method' in errors)
             self.assertTrue('shipment_method' in errors)
             self.assertTrue('new_billing_address' in errors)
@@ -379,7 +383,10 @@ def suite():
     suite = unittest.TestSuite()
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(TestCheckout)
-        )
+    )
+    suite.addTests(
+        doctest.DocTestSuite(forms)
+    )
     return suite
 
 

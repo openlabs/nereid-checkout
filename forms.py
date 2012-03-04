@@ -4,17 +4,56 @@
 
     Forms used in checkout
 
-    :copyright: (c) 2010-2011 by Openlabs Technologies & Consulting (P) LTD.
+    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) LTD.
     :license: GPLv3, see LICENSE for more details
 """
 from wtforms import Form, validators 
 from wtforms import TextField, IntegerField, SelectField, PasswordField
-from wtforms import RadioField, FormField, BooleanField
-from otcltools.general.forms import PreValidatedFormField, IgnoreIfTrueMixin
+from wtforms import FormField, BooleanField
+from wtforms.validators import StopValidation
+
+from .i18n import _, get_translations
 
 
-_REQD = [validators.Required(),]
+_REQD = [validators.Required(message=_("This field is required")),]
 
+
+class IgnoreIfTrueMixin(object):
+    """A mixin which evaluates a condition and if it is true
+    raises a StopValidation in the pre_validate stage.
+    """
+    def __init__(self, condition, *args, **kwargs):
+        super(IgnoreIfTrueMixin, self).__init__(*args, **kwargs)
+        self.condition = condition
+
+    def pre_validate(self, form):
+        "If the condition is satisfied StopValidation is raised"
+        if eval(self.condition):
+            raise StopValidation()
+        return super(IgnoreIfTrueMixin, self).pre_validate(form)
+
+
+class PreValidatedFormField(FormField):
+    """The default implementation of Form Field does
+    not have pre_validate method being called. Here
+    we have added that provision to the field
+    """
+    def validate(self, form, extra_validators=tuple()):
+        stop_validation = False
+        try:
+            self.pre_validate(form)
+        except StopValidation, e:
+            if e.args and e.args[0]:
+                self.errors.append(e.args[0])
+            stop_validation = True
+        except ValueError, e:
+            self.errors.append(e.args[0])
+
+        if stop_validation:
+            return len(self.errors) == 0
+
+        return super(PreValidatedFormField, self).validate(
+            form, extra_validators)
 
 class DummyPostData(dict):
     """
@@ -43,42 +82,66 @@ class CheckoutMethodForm(Form):
     >>> form.validate()
     True
     """
-    username = TextField('Username', _REQD)
-    password = PasswordField('Password', _REQD)
+
+    def _get_translations(self):
+        """Provide alternate translations factory.
+        """
+        return get_translations()
+
+    username = TextField(_('Username'), _REQD)
+    password = PasswordField(_('Password'), _REQD)
 
 
 class AddressForm(Form):
     "A Form resembling the res.partner.address"
-    name = TextField('Name', _REQD)
-    street = TextField('Street', _REQD)
-    streetbis = TextField('Street (Bis)')
-    zip = TextField('Post Code', _REQD)
-    city = TextField('City', _REQD)
-    email = TextField('e-mail', _REQD + [validators.Email()])
-    phone = TextField('Phone', _REQD)
+
+    def _get_translations(self):
+        """Provide alternate translations factory.
+        """
+        return get_translations()
+
+    name = TextField(_('Name'), _REQD)
+    street = TextField(_('Street'), _REQD)
+    streetbis = TextField(_('Street (Bis)'))
+    zip = TextField(_('Post Code'), _REQD)
+    city = TextField(_('City'), _REQD)
+    email = TextField(_('e-mail'), _REQD + [validators.Email()])
+    phone = TextField(_('Phone'), _REQD)
     # Fields expected to be ajax, will not support a native
     # Submit operation
-    country = IntegerField('Country', _REQD)
-    subdivision = IntegerField('State/Country', _REQD)
+    country = IntegerField(_('Country'), _REQD)
+    subdivision = IntegerField(_('State/County'), _REQD)
 
 
 class AddressFormWithPassword(AddressForm):
     """A Form resembling the res.partner.address but with username and password
     Not used at the moment
     """
-    username = TextField('Username', _REQD)
-    password = PasswordField('Password', [
-        validators.Required(),
-        validators.EqualTo('confirm', message='Passwords must match')])
-    confirm = PasswordField('Repeat Password')
+
+    def _get_translations(self):
+        """Provide alternate translations factory.
+        """
+        return get_translations()
+
+    username = TextField(_('Username'), _REQD)
+    password = PasswordField(_('Password'), [
+        _REQD,
+        validators.EqualTo('confirm', message=_('Passwords must match'))])
+    confirm = PasswordField(_('Repeat Password'))
 
 
 class AddressChoiceForm(Form):
     '''The form allows to choose from an address
     or create a new one
     '''
-    address = SelectField('Select Address',
-        choices=[('0', 'New Address')],
+
+    def _get_translations(self):
+        """Provide alternate translations factory.
+        """
+        return get_translations()
+
+    address = SelectField(_('Select Address'),
+        choices=[('0', _('New Address'))],
         coerce=int, validators=_REQD)
     new_address = FormField(AddressForm)
 
@@ -120,16 +183,24 @@ class OneStepCheckout(Form):
     False
 
     """
+
+    def _get_translations(self):
+        """Provide alternate translations factory.
+        """
+        return get_translations()
+
     new_billing_address = FormField(AddressForm)
     shipping_same_as_billing = BooleanField(
-        "Use billing address as shipping address")
+        _("Use billing address as shipping address")
+    )
     new_shipping_address = IgnoreIfTrueFormField(
-        'form.shipping_same_as_billing.data', AddressForm)
+        'form.shipping_same_as_billing.data', AddressForm
+    )
 
     #: Since the loading is on AJAX, there is no way to fill
     #: the optons pre-rendering. So take them as integer IDs
-    shipment_method = IntegerField('Shipping Method', _REQD)
-    payment_method = IntegerField('Payment Method', _REQD)
+    shipment_method = IntegerField(_('Shipping Method'), _REQD)
+    payment_method = IntegerField(_('Payment Method'), _REQD)
 
 
 class OneStepCheckoutRegd(OneStepCheckout):
@@ -189,15 +260,20 @@ class OneStepCheckoutRegd(OneStepCheckout):
     >>> form.validate()
     True
     """
-    billing_address = SelectField('Billing Address', coerce=int,
-        choices=[(0, 'New Address')])
+    def _get_translations(self):
+        """Provide alternate translations factory.
+        """
+        return get_translations()
+
+    billing_address = SelectField(_('Billing Address'), coerce=int,
+        choices=[(0, _('New Address'))])
     new_billing_address = IgnoreIfTrueFormField(
         'form.billing_address.data != 0', AddressForm)
 
     shipping_address = IgnoreIfTrueSelectField(
         'form.shipping_same_as_billing.data == True',
-        'Shipping Address', coerce=int,
-        choices=[(0, 'New Address')])
+        _('Shipping Address'), coerce=int,
+        choices=[(0, _('New Address'))])
     new_shipping_address = IgnoreIfTrueFormField(
         'form.shipping_same_as_billing.data or form.shipping_address.data != 0',
         AddressForm)

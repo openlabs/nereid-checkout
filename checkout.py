@@ -7,12 +7,11 @@
     :copyright: (c) 2010-2011 by Openlabs Technologies & Consulting (P) LTD.
     :license: GPLv3, see LICENSE for more details
 """
-from nereid import render_template, request, url_for, flash, \
-        redirect, login_required, abort
-from nereid.globals import request, current_app
+from nereid import render_template, request, url_for, flash, redirect
 from werkzeug.wrappers import BaseResponse
 from trytond.model import ModelView, ModelSQL, fields
 
+from .i18n import _, N_
 from .forms import OneStepCheckoutRegd, OneStepCheckout
 
 # pylint: disable-msg=E1101
@@ -38,7 +37,6 @@ class DefaultCheckout(ModelSQL):
     _name = 'nereid.checkout.default'
     _description = __doc__
 
-
     def _begin_guest(self):
         """Start of checkout process for guest user which is different
         from login user who may already have addresses
@@ -56,7 +54,7 @@ class DefaultCheckout(ModelSQL):
 
         cart = cart_obj.open_cart()
         form = OneStepCheckoutRegd(request.form)
-        addresses = [(0, 'New Address')] + cart_obj._get_addresses()
+        addresses = [(0, _('New Address'))] + cart_obj._get_addresses()
         form.billing_address.choices = addresses
         form.shipping_address.choices = addresses
 
@@ -94,22 +92,20 @@ class DefaultCheckout(ModelSQL):
     def _create_address(self, data):
         "Create a new party.address"
         address_obj = self.pool.get('party.address')
+        nereid_user_obj = self.pool.get('nereid.user')
         contact_mech_obj = self.pool.get('party.contact_mechanism')
 
         email = data.pop('email')
         phone = data.pop('phone')
 
         if request.is_guest_user:
-            # First search if an address with the email already exists
-            # for a party who is not Guest. If it exists its not a problem
-            existing_ids = contact_mech_obj.search([
-                ('value', '=', email),
-                ('type', '=', 'email'),
-                ('party', '!=', request.nereid_user.party.id)
+            existing = nereid_user_obj.search([
+                ('email', '=', email),
+                ('company', '=', request.nereid_website.company.id),
                 ])
-            if existing_ids:
-                flash('A registration already exists with this email. '
-                    'Please login or contact customer care')
+            if existing:
+                flash(_('A registration already exists with this email. '
+                    'Please login or contact customer care'))
                 return self._begin_guest()
 
         data['country'] = data.pop('country')
@@ -153,7 +149,6 @@ class DefaultCheckout(ModelSQL):
                 'invoice_address'    : billing_address,
                 'shipment_address'   : shipping_address,
                 })
-
         return form, form.validate()
 
     def _submit_registered(self):
@@ -213,7 +208,7 @@ class DefaultCheckout(ModelSQL):
 
         sale = cart.sale
         if not sale.lines:
-            flash("Add some items to your cart before you checkout!")
+            flash(_("Add some items to your cart before you checkout!"))
             return redirect(url_for('nereid.website.home'))
         if request.method == 'GET':
             return (self._begin_guest() if request.is_guest_user \
@@ -240,11 +235,16 @@ class DefaultCheckout(ModelSQL):
                     sale_obj.workflow_trigger_validate([sale.id], 'confirm')
                 cart_obj.check_update_date(cart)
 
-                flash("Your order #%s has been processed" % sale.reference)
+                flash(_("Your order #%(sale)s has been processed", sale=sale.reference))
                 if request.is_guest_user:
                     return redirect(url_for('nereid.website.home'))
                 else:
-                    return redirect(url_for('sale.sale.render', sale=sale.id, confirmation=True))
+                    return redirect(
+                        url_for(
+                            'sale.sale.render', sale=sale.id, 
+                            confirmation=True
+                        )
+                    )
 
             return render_template('checkout.jinja', form=form, cart=cart)
 

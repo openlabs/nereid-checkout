@@ -2,7 +2,7 @@
 #this repository contains the full copyright notices and license terms.
 {
     'name': 'Nereid Checkout and Default Checkout',
-    'version': '2.0.0.2',
+    'version': '2.0.0.3',
     'author': 'Openlabs Technologies & Consulting (P) LTD',
     'email': 'info@openlabs.co.in',
     'website': 'http://www.openlabs.co.in/',
@@ -11,7 +11,7 @@
     ''',
     'depends': [
             'nereid',
-            'nereid_cart_b2c'
+            'nereid_cart_b2c',
         ],
     'xml': [
         'checkout.xml',
