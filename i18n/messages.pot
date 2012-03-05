@@ -1,0 +1,118 @@
+# Translations template for PROJECT.
+# Copyright (C) 2012 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2012.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2012-03-05 08:32-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 0.9.6\n"
+
+#: checkout.py:57 forms.py:144 forms.py:269 forms.py:276
+msgid "New Address"
+msgstr ""
+
+#: checkout.py:107
+msgid ""
+"A registration already exists with this email. Please login or contact "
+"customer care"
+msgstr ""
+
+#: checkout.py:211
+msgid "Add some items to your cart before you checkout!"
+msgstr ""
+
+#: checkout.py:238
+#, python-format
+msgid "Your order #%(sale)s has been processed"
+msgstr ""
+
+#: forms.py:18
+msgid "This field is required"
+msgstr ""
+
+#: forms.py:91 forms.py:126
+msgid "Username"
+msgstr ""
+
+#: forms.py:92 forms.py:127
+msgid "Password"
+msgstr ""
+
+#: forms.py:103
+msgid "Name"
+msgstr ""
+
+#: forms.py:104
+msgid "Street"
+msgstr ""
+
+#: forms.py:105
+msgid "Street (Bis)"
+msgstr ""
+
+#: forms.py:106
+msgid "Post Code"
+msgstr ""
+
+#: forms.py:107
+msgid "City"
+msgstr ""
+
+#: forms.py:108
+msgid "e-mail"
+msgstr ""
+
+#: forms.py:109
+msgid "Phone"
+msgstr ""
+
+#: forms.py:112
+msgid "Country"
+msgstr ""
+
+#: forms.py:113
+msgid "State/County"
+msgstr ""
+
+#: forms.py:129
+msgid "Passwords must match"
+msgstr ""
+
+#: forms.py:130
+msgid "Repeat Password"
+msgstr ""
+
+#: forms.py:143
+msgid "Select Address"
+msgstr ""
+
+#: forms.py:194
+msgid "Use billing address as shipping address"
+msgstr ""
+
+#: forms.py:202
+msgid "Shipping Method"
+msgstr ""
+
+#: forms.py:203
+msgid "Payment Method"
+msgstr ""
+
+#: forms.py:268
+msgid "Billing Address"
+msgstr ""
+
+#: forms.py:275
+msgid "Shipping Address"
+msgstr ""
+
