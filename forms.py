@@ -198,7 +198,7 @@ class OneStepCheckout(Form):
     )
 
     #: Since the loading is on AJAX, there is no way to fill
-    #: the optons pre-rendering. So take them as integer IDs
+    #: the options pre-rendering. So take them as integer IDs
     shipment_method = IntegerField(_('Shipping Method'), _REQD)
     payment_method = IntegerField(_('Payment Method'), _REQD)
 
