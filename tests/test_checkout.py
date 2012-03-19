@@ -52,7 +52,9 @@ class TestCheckout(TestCase):
                 category_template = category_template,
                 product_template = product_template,
                 countries = [('set', cls.available_countries)],
-                currencies = [('set', cls.available_currencies)])
+                currencies = [('set', cls.available_currencies)],
+                application_user = 1, guest_user = cls.guest_user
+            )
 
             testing_proxy.create_template('home.jinja', ' Home ', cls.site)
             testing_proxy.create_template('checkout.jinja', 
@@ -90,7 +92,6 @@ class TestCheckout(TestCase):
     def get_app(self, **options):
         options.update({
             'SITE': 'testsite.com',
-            'GUEST_USER': self.guest_user,
             })
         return testing_proxy.make_app(**options)
 
