@@ -230,10 +230,11 @@ class DefaultCheckout(ModelSQL):
                     return response
 
                 if sale.state == 'draft':
+                    # Ensure that the order date is that of today
+                    cart_obj.check_update_date(cart)
                     # Confirm the order
                     sale_obj.workflow_trigger_validate([sale.id], 'quotation')
                     sale_obj.workflow_trigger_validate([sale.id], 'confirm')
-                cart_obj.check_update_date(cart)
 
                 flash(_("Your order #%(sale)s has been processed", sale=sale.reference))
                 if request.is_guest_user:
