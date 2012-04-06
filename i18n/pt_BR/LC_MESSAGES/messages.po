@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2012-03-05 08:32-0500\n"
+"POT-Creation-Date: 2012-04-05 20:46-0400\n"
 "PO-Revision-Date: 2012-03-05 08:32-0500\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: pt_BR <LL@li.org>\n"
@@ -32,7 +32,7 @@ msgstr ""
 msgid "Add some items to your cart before you checkout!"
 msgstr ""
 
-#: checkout.py:238
+#: checkout.py:239
 #, python-format
 msgid "Your order #%(sale)s has been processed"
 msgstr ""
