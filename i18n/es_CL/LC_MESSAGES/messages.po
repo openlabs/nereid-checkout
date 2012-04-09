@@ -3,14 +3,13 @@
 # This file is distributed under the same license as the PROJECT project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2012.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2012-04-05 20:46-0400\n"
-"PO-Revision-Date: 2012-03-05 08:32-0500\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2012-04-09 14:13-0500\n"
+"Last-Translator: Esteban <esteban@dhtsglobal.com>\n"
 "Language-Team: es_CL <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "MIME-Version: 1.0\n"
@@ -18,102 +17,105 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 0.9.6\n"
 
-#: checkout.py:57 forms.py:144 forms.py:269 forms.py:276
+#: checkout.py:57
+#: forms.py:144
+#: forms.py:269
+#: forms.py:276
 msgid "New Address"
-msgstr ""
+msgstr "Nueva Dirección"
 
 #: checkout.py:107
-msgid ""
-"A registration already exists with this email. Please login or contact "
-"customer care"
-msgstr ""
+msgid "A registration already exists with this email. Please login or contact customer care"
+msgstr "Un registro que ya existe con este correo electrónico. Por favor, inicie sesión o póngase en contacto con nuestra central de atención al cliente"
 
 #: checkout.py:211
 msgid "Add some items to your cart before you checkout!"
-msgstr ""
+msgstr "Agregue algunos productos a su carrito antes de finalizar su compra!"
 
 #: checkout.py:239
 #, python-format
 msgid "Your order #%(sale)s has been processed"
-msgstr ""
+msgstr "Su pedido #%(sale)s se ha procesado"
 
 #: forms.py:18
 msgid "This field is required"
-msgstr ""
+msgstr "Este campo es requerido"
 
-#: forms.py:91 forms.py:126
+#: forms.py:91
+#: forms.py:126
 msgid "Username"
-msgstr ""
+msgstr "Usuario"
 
-#: forms.py:92 forms.py:127
+#: forms.py:92
+#: forms.py:127
 msgid "Password"
-msgstr ""
+msgstr "Contraseña"
 
 #: forms.py:103
 msgid "Name"
-msgstr ""
+msgstr "Nombre"
 
 #: forms.py:104
 msgid "Street"
-msgstr ""
+msgstr "Calle"
 
 #: forms.py:105
 msgid "Street (Bis)"
-msgstr ""
+msgstr "Numero"
 
 #: forms.py:106
 msgid "Post Code"
-msgstr ""
+msgstr "Código Postal"
 
 #: forms.py:107
 msgid "City"
-msgstr ""
+msgstr "Ciudad"
 
 #: forms.py:108
 msgid "e-mail"
-msgstr ""
+msgstr "correo electrónico"
 
 #: forms.py:109
 msgid "Phone"
-msgstr ""
+msgstr "Teléfono"
 
 #: forms.py:112
 msgid "Country"
-msgstr ""
+msgstr "País"
 
 #: forms.py:113
 msgid "State/County"
-msgstr ""
+msgstr "Estado"
 
 #: forms.py:129
 msgid "Passwords must match"
-msgstr ""
+msgstr "Las contraseñas deben coincidir"
 
 #: forms.py:130
 msgid "Repeat Password"
-msgstr ""
+msgstr "Repita su contraseña"
 
 #: forms.py:143
 msgid "Select Address"
-msgstr ""
+msgstr "seleccionar Dirección"
 
 #: forms.py:194
 msgid "Use billing address as shipping address"
-msgstr ""
+msgstr "Utilizar la dirección de facturación como dirección de Envío"
 
 #: forms.py:202
 msgid "Shipping Method"
-msgstr ""
+msgstr "Método de Envío"
 
 #: forms.py:203
 msgid "Payment Method"
-msgstr ""
+msgstr "Forma de Pago"
 
 #: forms.py:268
 msgid "Billing Address"
-msgstr ""
+msgstr "Dirección de facturación"
 
 #: forms.py:275
 msgid "Shipping Address"
-msgstr ""
+msgstr "Dirección de Envío"
 
