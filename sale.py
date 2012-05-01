@@ -12,7 +12,7 @@ from uuid import uuid4
 from trytond.model import ModelSQL, ModelView, ModelWorkflow, fields
 
 from nereid import render_template, request, abort
-from nereid.helpers import Pagination
+from nereid.contrib.pagination import Pagination
 
 
 class Sale(ModelWorkflow, ModelSQL, ModelView):
