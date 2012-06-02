@@ -10,6 +10,7 @@
 from nereid import render_template, request, url_for, flash, redirect
 from werkzeug.wrappers import BaseResponse
 from trytond.model import ModelView, ModelSQL, fields
+from trytond.pool import Pool
 
 from .i18n import _
 from .forms import OneStepCheckoutRegd, OneStepCheckout
@@ -41,7 +42,7 @@ class DefaultCheckout(ModelSQL):
         """Start of checkout process for guest user which is different
         from login user who may already have addresses
         """
-        cart_obj = self.pool.get('nereid.cart')
+        cart_obj = Pool().get('nereid.cart')
 
         cart = cart_obj.open_cart()
         form = OneStepCheckout(request.form)
@@ -50,7 +51,7 @@ class DefaultCheckout(ModelSQL):
 
     def _begin_registered(self):
         '''Begin checkout process for registered user.'''
-        cart_obj = self.pool.get('nereid.cart')
+        cart_obj = Pool().get('nereid.cart')
 
         cart = cart_obj.open_cart()
         form = OneStepCheckoutRegd(request.form)
@@ -91,9 +92,9 @@ class DefaultCheckout(ModelSQL):
 
     def _create_address(self, data):
         "Create a new party.address"
-        address_obj = self.pool.get('party.address')
-        nereid_user_obj = self.pool.get('nereid.user')
-        contact_mech_obj = self.pool.get('party.contact_mechanism')
+        address_obj = Pool().get('party.address')
+        nereid_user_obj = Pool().get('nereid.user')
+        contact_mech_obj = Pool().get('party.contact_mechanism')
 
         email = data.pop('email')
         phone = data.pop('phone')
@@ -122,14 +123,14 @@ class DefaultCheckout(ModelSQL):
                 'value': phone,
             })
         address_id = address_obj.create(data)
-        address_obj.write(address_id, {'email': email_id, 'phone': phone_id})
+        address_obj.write(address_id, {'email': email, 'phone': phone})
 
         return address_id
 
     def _submit_guest(self):
         '''Submission when guest user'''
-        cart_obj = self.pool.get('nereid.cart')
-        sale_obj = self.pool.get('sale.sale')
+        cart_obj = Pool().get('nereid.cart')
+        sale_obj = Pool().get('sale.sale')
 
         form = OneStepCheckout(request.form)
         cart = cart_obj.open_cart()
@@ -153,8 +154,8 @@ class DefaultCheckout(ModelSQL):
 
     def _submit_registered(self):
         '''Submission when registered user'''
-        cart_obj = self.pool.get('nereid.cart')
-        sale_obj = self.pool.get('sale.sale')
+        cart_obj = Pool().get('nereid.cart')
+        sale_obj = Pool().get('sale.sale')
 
         form = OneStepCheckoutRegd(request.form)
         addresses = cart_obj._get_addresses()
@@ -197,8 +198,8 @@ class DefaultCheckout(ModelSQL):
         A POST to the method will result in the confirmation of the order and
         subsequent handling of data.
         '''
-        cart_obj = self.pool.get('nereid.cart')
-        sale_obj = self.pool.get('sale.sale')
+        cart_obj = Pool().get('nereid.cart')
+        sale_obj = Pool().get('sale.sale')
 
         cart = cart_obj.open_cart()
         if not cart.sale:
@@ -233,8 +234,8 @@ class DefaultCheckout(ModelSQL):
                     # Ensure that the order date is that of today
                     cart_obj.check_update_date(cart)
                     # Confirm the order
-                    sale_obj.workflow_trigger_validate([sale.id], 'quotation')
-                    sale_obj.workflow_trigger_validate([sale.id], 'confirm')
+                    sale_obj.quote([sale.id])
+                    sale_obj.confirm([sale.id])
 
                 flash(_("Your order #%(sale)s has been processed", sale=sale.reference))
                 if request.is_guest_user:

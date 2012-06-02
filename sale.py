@@ -9,13 +9,13 @@
 """
 from uuid import uuid4
 
-from trytond.model import ModelSQL, ModelView, ModelWorkflow, fields
+from trytond.model import ModelSQL, ModelView, Workflow, fields
 
 from nereid import render_template, request, abort
 from nereid.contrib.pagination import Pagination
 
 
-class Sale(ModelWorkflow, ModelSQL, ModelView):
+class Sale(Workflow, ModelSQL, ModelView):
     """Add Render and Render list"""
     _name = 'sale.sale'
 
