@@ -36,6 +36,7 @@ class TestCheckout(TestCase):
             journal_obj = Pool().get('account.journal')
             country_obj = Pool().get('country.country')
             currency_obj = Pool().get('currency.currency')
+            location_obj = Pool().get('stock.location')
 
             # Create company
             cls.company = testing_proxy.create_company('Test Company')
@@ -49,19 +50,17 @@ class TestCheckout(TestCase):
 
             cls.guest_user = testing_proxy.create_guest_user(company=cls.company)
 
-            category_template = testing_proxy.create_template(
-                'category-list.jinja', ' ')
-            product_template = testing_proxy.create_template(
-                'product-list.jinja', ' ')
             cls.available_countries = country_obj.search([], limit=5)
             cls.available_currencies = currency_obj.search([('code', '=', 'USD')])
+            location, = location_obj.search([
+                ('type', '=', 'storage')
+            ], limit=1)
             cls.site = testing_proxy.create_site(
                 'localhost', 
-                category_template = category_template,
-                product_template = product_template,
                 countries = [('set', cls.available_countries)],
                 currencies = [('set', cls.available_currencies)],
-                application_user = 1, guest_user = cls.guest_user
+                application_user = 1, guest_user = cls.guest_user,
+                stock_location = location,
             )
 
             testing_proxy.create_template('home.jinja', ' Home ', cls.site)
@@ -91,8 +90,6 @@ class TestCheckout(TestCase):
                 account_revenue = testing_proxy.get_account_by_kind('revenue'),
                 uri = 'product-1',
                 sale_uom = uom_obj.search([('name', '=', 'Unit')], limit=1)[0],
-                #account_journal_stock_input = stock_journal,
-                #account_journal_stock_output = stock_journal,
                 )
 
             txn.cursor.commit()
