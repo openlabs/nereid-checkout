@@ -11,7 +11,7 @@ from uuid import uuid4
 
 from trytond.model import ModelSQL, ModelView, Workflow, fields
 
-from nereid import render_template, request, abort
+from nereid import render_template, request, abort, login_required
 from nereid.contrib.pagination import Pagination
 
 
@@ -26,6 +26,7 @@ class Sale(Workflow, ModelSQL, ModelView):
 
     per_page = 10
 
+    @login_required
     def render_list(self, page=1):
         """Render all orders
         """
