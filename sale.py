@@ -81,7 +81,7 @@ class Sale(Workflow, ModelSQL, ModelView):
         :param sale: ID of the sale order
         """
         access_code = uuid4()
-        self.write(sale, {'guest_access_code': access_code})
+        self.write(sale, {'guest_access_code': unicode(access_code)})
         return access_code
 
     def send_confirmation_email(self, sale):
