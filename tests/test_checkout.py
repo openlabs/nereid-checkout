@@ -10,9 +10,20 @@
 import doctest
 from decimal import Decimal
 import unittest2 as unittest
+from minimock import Mock
+import smtplib
+smtplib.SMTP = Mock('smtplib.SMTP')
+smtplib.SMTP.mock_returns = Mock('smtp_connection')
 
 from trytond.config import CONFIG
 CONFIG.options['db_type'] = 'sqlite'
+CONFIG.options['data_path'] = '/tmp/temp_tryton_data/'
+CONFIG['smtp_server'] = 'smtp.gmail.com'
+CONFIG['smtp_user'] = 'test@xyz.com'
+CONFIG['smtp_password'] = 'testpassword'
+CONFIG['smtp_port'] = 587
+CONFIG['smtp_tls'] = True
+CONFIG['smtp_from'] = 'from@xyz.com'
 from trytond.modules import register_classes
 register_classes()
 
@@ -55,12 +66,16 @@ class TestCheckout(TestCase):
             location, = location_obj.search([
                 ('type', '=', 'storage')
             ], limit=1)
+            warehouse, = location_obj.search([
+                ('type', '=', 'warehouse')
+            ], limit=1)
             cls.site = testing_proxy.create_site(
                 'localhost', 
                 countries = [('set', cls.available_countries)],
                 currencies = [('set', cls.available_currencies)],
                 application_user = 1, guest_user = cls.guest_user,
                 stock_location = location,
+                warehouse=warehouse,
             )
 
             testing_proxy.create_template('home.jinja', ' Home ', cls.site)
@@ -76,6 +91,11 @@ class TestCheckout(TestCase):
                 'product.jinja', ' ', cls.site)
             category_template = testing_proxy.create_template(
                 'category.jinja', ' ', cls.site)
+
+            testing_proxy.create_template(
+                'emails/sale-confirmation-text.jinja', ' ', cls.site)
+            testing_proxy.create_template(
+                'emails/sale-confirmation-html.jinja', ' ', cls.site)
 
             category = testing_proxy.create_product_category(
                 'Category', uri='category')
