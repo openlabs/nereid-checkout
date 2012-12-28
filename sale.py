@@ -10,9 +10,12 @@
 from uuid import uuid4
 
 from trytond.model import ModelSQL, ModelView, Workflow, fields
+from trytond.tools import get_smtp_server
 
 from nereid import render_template, request, abort, login_required
 from nereid.contrib.pagination import Pagination
+from trytond.config import CONFIG
+from nereid.templating import render_email
 
 
 class Sale(Workflow, ModelSQL, ModelView):
@@ -97,6 +100,25 @@ class Sale(Workflow, ModelSQL, ModelView):
 
         :param sale: The ID of the sale order
         """
-        pass
+        email_message = render_email(
+            CONFIG['smtp_from'], sale.invoice_address.email,
+            'Order Completed',
+            text_template = 'emails/sale-confirmation-text.jinja',
+            html_template = 'emails/sale-confirmation-html.jinja',
+            sale = sale
+        )
+        server = get_smtp_server()
+        server.sendmail(
+            CONFIG['smtp_from'], [sale.invoice_address.email],
+            email_message.as_string()
+        )
+        server.quit()
+
+    def confirm(self, ids):
+        "Send an email after sale is confirmed"
+        super(Sale, self).confirm(ids)
+
+        for sale in self.browse(ids):
+            self.send_confirmation_email(sale)
 
 Sale()
