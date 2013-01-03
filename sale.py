@@ -16,6 +16,7 @@ from nereid import render_template, request, abort, login_required
 from nereid.contrib.pagination import Pagination
 from trytond.config import CONFIG
 from nereid.templating import render_email
+from nereid.ctx import has_request_context
 
 
 class Sale(Workflow, ModelSQL, ModelView):
@@ -118,7 +119,8 @@ class Sale(Workflow, ModelSQL, ModelView):
         "Send an email after sale is confirmed"
         super(Sale, self).confirm(ids)
 
-        for sale in self.browse(ids):
-            self.send_confirmation_email(sale)
+        if has_request_context():
+            for sale in self.browse(ids):
+                self.send_confirmation_email(sale)
 
 Sale()
