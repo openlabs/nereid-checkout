@@ -4,10 +4,10 @@
 
     Nereid Checkout register and default checkout
 
-    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) LTD.
+    :copyright: (c) 2010-2013 by Openlabs Technologies & Consulting (P) LTD.
     :license: GPLv3, see LICENSE for more details
 """
-from nereid import render_template, request, url_for, flash, redirect
+from nereid import render_template, request, url_for, flash, redirect, abort
 from werkzeug.wrappers import BaseResponse
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.pool import Pool
@@ -90,6 +90,21 @@ class DefaultCheckout(ModelSQL):
         """
         pass
 
+    def _handle_guest_checkout_with_regd_email(self, email):
+        """
+        Handle a situation where a guest user tries to checkout but
+        there is already a registered user with the email. Depending
+        on your company policy you might want top do several things like
+        allowing the user to checkout and also send him an email that
+        you could have used the account for checkout etc.
+
+        By default, the behavior is NOT to allow such checkouts and instead
+        flash a message and quit
+        """
+        flash(_('A registration already exists with this email. '
+            'Please login or contact customer care'))
+        abort(redirect(url_for('nereid.checkout.default.checkout')))
+
     def _create_address(self, data):
         "Create a new party.address"
         address_obj = Pool().get('party.address')
@@ -105,9 +120,7 @@ class DefaultCheckout(ModelSQL):
                 ('company', '=', request.nereid_website.company.id),
                 ])
             if existing:
-                flash(_('A registration already exists with this email. '
-                    'Please login or contact customer care'))
-                return self._begin_guest()
+                self._handle_guest_checkout_with_regd_email(email)
 
         data['country'] = data.pop('country')
         data['subdivision'] = data.pop('subdivision')

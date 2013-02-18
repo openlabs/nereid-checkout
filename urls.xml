@@ -5,13 +5,13 @@
         and license terms.
     -->
 <tryton>
-  <data noupdate="1">
+  <data>
   
     <record id="checkout" model="nereid.url_rule">
         <field name="rule">/&lt;language&gt;/checkout</field>
         <field name="endpoint">nereid.checkout.default.checkout</field>
         <field name="sequence" eval="50" />
-          <field name="methods">("GET", "POST")</field>
+        <field name="methods">("GET", "POST")</field>
         <field name="url_map" ref="nereid.default_url_map" />
     </record>
 
