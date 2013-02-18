@@ -17,6 +17,7 @@ from trytond.pool import PoolMeta
 from nereid import render_template, request, abort, login_required
 from nereid.contrib.pagination import Pagination
 from nereid.templating import render_email
+from nereid.ctx import has_request_context
 
 
 __all__ = ['Sale']
@@ -123,5 +124,6 @@ class Sale:
         "Send an email after sale is confirmed"
         super(Sale, cls).confirm(sales)
 
-        for sale in sales:
-            sale.send_confirmation_email()
+        if has_request_context():
+            for sale in sales:
+                sale.send_confirmation_email()
