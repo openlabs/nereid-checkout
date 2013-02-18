@@ -4,10 +4,10 @@
 
     Forms used in checkout
 
-    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) LTD.
+    :copyright: (c) 2010-2013 by Openlabs Technologies & Consulting (P) LTD.
     :license: GPLv3, see LICENSE for more details
 """
-from wtforms import Form, validators 
+from wtforms import Form, validators
 from wtforms import TextField, IntegerField, SelectField, PasswordField
 from wtforms import FormField, BooleanField
 from wtforms.validators import StopValidation

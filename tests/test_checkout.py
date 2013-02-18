@@ -48,10 +48,30 @@ class TestCheckout(BaseTestCase):
 
     def _create_pricelists(self):
         """
-        Dont complicate things by pricelists are they are already tested
-        by the test_product test case
+        Create the pricelists
         """
-        return None, None
+        # Setup the pricelists
+        self.party_pl_margin = Decimal('1')
+        self.guest_pl_margin = Decimal('1')
+        user_price_list = self.pricelist_obj.create({
+            'name': 'PL 1',
+            'company': self.company.id,
+            'lines': [
+                ('create', {
+                    'formula': 'unit_price * %s' % self.party_pl_margin
+                })
+            ],
+        })
+        guest_price_list = self.pricelist_obj.create({
+            'name': 'PL 2',
+            'company': self.company.id,
+            'lines': [
+                ('create', {
+                    'formula': 'unit_price * %s' % self.guest_pl_margin
+                })
+            ],
+        })
+        return guest_price_list.id, user_price_list.id
 
     def tearDown(self):
         # Unpatch SMTP Lib
@@ -68,16 +88,14 @@ class TestCheckout(BaseTestCase):
                 self.assertEqual(rv.status_code, 200)
 
                 c.post('/en_US/cart/add', data={
-                    'product': self.product, 'quantity': 5
+                    'product': self.product.id, 'quantity': 5
                     })
                 rv = c.get('/en_US/cart')
                 self.assertEqual(rv.status_code, 200)
 
-            sales_ids = self.sale_obj.search([])
-            self.assertEqual(len(sales_ids), 1)
-            sale = self.sale_obj.browse(sales_ids[0])
+            sale, = self.sale_obj.search([])
             self.assertEqual(len(sale.lines), 1)
-            self.assertEqual(sale.lines[0].product.id, self.product)
+            self.assertEqual(sale.lines[0].product, self.product)
 
     def test_0020_guest_invalids(self):
         """Submit as guest and all invalids."""
@@ -87,7 +105,7 @@ class TestCheckout(BaseTestCase):
 
             with app.test_client() as c:
                 c.post('/en_US/cart/add', data={
-                    'product': self.product, 'quantity': 5
+                    'product': self.product.id, 'quantity': 5
                     })
                 rv = c.get('/en_US/checkout')
                 self.assertEqual(rv.status_code, 200)
@@ -113,12 +131,12 @@ class TestCheckout(BaseTestCase):
             self.setup_defaults()
             app = self.get_app()
 
-            country = self.country_obj.browse(self.available_countries[0])
+            country = self.country_obj(self.available_countries[0])
             subdivision = country.subdivisions[0]
 
             with app.test_client() as c:
                 c.post('/en_US/cart/add', data={
-                    'product': self.product, 'quantity': 5
+                    'product': self.product.id, 'quantity': 5
                     })
                 rv = c.get('/en_US/checkout')
                 self.assertEqual(rv.status_code, 200)
@@ -140,11 +158,10 @@ class TestCheckout(BaseTestCase):
                 rv = c.post('/en_US/checkout', data=data)
                 self.assertEqual(rv.status_code, 302)
 
-            sales_ids = self.sale_obj.search([
-                ('state', '!=', 'draft'), ('is_cart', '=', True)
-                ])
-            self.assertEqual(len(sales_ids), 1)
-            sale = self.sale_obj.browse(sales_ids[0])
+            sale, = self.sale_obj.search([
+                ('state', '!=', 'draft'),
+                ('is_cart', '=', True),
+            ])
             self.assertEqual(sale.total_amount, Decimal('50'))
             self.assertEqual(sale.tax_amount, Decimal('0'))
             self.assertEqual(len(sale.lines), 1)
@@ -159,12 +176,12 @@ class TestCheckout(BaseTestCase):
             self.setup_defaults()
             app = self.get_app()
 
-            country = self.country_obj.browse(self.available_countries[0])
+            country = self.country_obj(self.available_countries[0])
             subdivision = country.subdivisions[0]
 
             with app.test_client() as c:
                 c.post('/en_US/cart/add', data={
-                    'product': self.product, 'quantity': 5
+                    'product': self.product.id, 'quantity': 5
                     })
                 rv = c.get('/en_US/checkout')
                 self.assertEqual(rv.status_code, 200)
@@ -197,7 +214,7 @@ class TestCheckout(BaseTestCase):
             self.setup_defaults()
             app = self.get_app()
 
-            regd_user = self.nereid_user_obj.browse(self.registered_user_id)
+            regd_user = self.registered_user_id
             address_id = regd_user.addresses[0].id
             party_id = regd_user.party.id
 
@@ -205,7 +222,7 @@ class TestCheckout(BaseTestCase):
             with app.test_client() as c:
                 self.login(c, 'email@example.com', 'password')
                 c.post('/en_US/cart/add', data={
-                    'product': self.product, 'quantity': 5
+                    'product': self.product.id, 'quantity': 5
                     })
                 rv = c.get('/en_US/checkout')
                 self.assertEqual(rv.status_code, 200)
@@ -238,9 +255,7 @@ class TestCheckout(BaseTestCase):
                     })
                 self.assertEqual(rv.status_code, 302)
 
-            sale_ids = self.sale_obj.search([('party', '=', party_id)])
-            self.assertEqual(len(sale_ids), 1)
-            sale = self.sale_obj.browse(sale_ids[0])
+            sale, = self.sale_obj.search([('party', '=', party_id)])
             self.assertEqual(sale.total_amount, Decimal('50'))
             self.assertEqual(sale.tax_amount, Decimal('0'))
             self.assertEqual(len(sale.lines), 1)
@@ -252,15 +267,15 @@ class TestCheckout(BaseTestCase):
             self.setup_defaults()
             app = self.get_app()
 
-            regd_user = self.nereid_user_obj.browse(self.registered_user_id2)
+            regd_user = self.registered_user_id2
             party_id = regd_user.party.id
-            country = self.country_obj.browse(self.available_countries[0])
+            country = self.country_obj(self.available_countries[0])
             subdivision = country.subdivisions[0]
 
             with app.test_client() as c:
                 self.login(c, 'email2@example.com', 'password2')
                 c.post('/en_US/cart/add', data={
-                    'product': self.product, 'quantity': 5
+                    'product': self.product.id, 'quantity': 5
                     })
                 rv = c.get('/en_US/checkout')
                 self.assertEqual(rv.status_code, 200)
@@ -302,9 +317,7 @@ class TestCheckout(BaseTestCase):
                     })
                 self.assertEqual(rv.status_code, 302)
 
-            sale_ids = self.sale_obj.search([('party', '=', party_id)])
-            self.assertEqual(len(sale_ids), 1)
-            sale = self.sale_obj.browse(sale_ids[0])
+            sale, = self.sale_obj.search([('party', '=', party_id)])
             self.assertEqual(sale.total_amount, Decimal('50'))
             self.assertEqual(sale.tax_amount, Decimal('0'))
             self.assertEqual(len(sale.lines), 1)
@@ -322,17 +335,15 @@ class TestCheckout(BaseTestCase):
                 'display_name': 'Registered User 3',
                 'email': 'email3@example.com',
                 'password': 'password3',
-                'company': self.company_id,
+                'company': self.company.id,
             })
-            regd_user3 = self.nereid_user_obj.browse(self.registered_user_id3)
+            regd_user3 = self.registered_user_id3
             party_id = regd_user3.party.id
-            country = self.country_obj.browse(self.available_countries[0])
-            subdivision = country.subdivisions[0]
 
             with app.test_client() as c:
                 self.login(c, 'email3@example.com', 'password3')
                 c.post('/en_US/cart/add', data={
-                    'product': self.product, 'quantity': 5
+                    'product': self.product.id, 'quantity': 5
                     })
                 rv = c.get('/en_US/checkout')
                 self.assertEqual(rv.status_code, 200)
@@ -366,9 +377,7 @@ class TestCheckout(BaseTestCase):
                 self.assertEqual(rv.status_code, 302)
                 self.assertTrue('/en_US/order/1/True' in rv.data)
 
-            sale_ids = self.sale_obj.search([('party', '=', party_id)])
-            self.assertEqual(len(sale_ids), 1)
-            sale = self.sale_obj.browse(sale_ids[0])
+            sale, = self.sale_obj.search([('party', '=', party_id)])
 
 
 

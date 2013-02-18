@@ -4,23 +4,28 @@
 
     Additional Changes to sale
 
-    :copyright: (c) 2011-2012 by Openlabs Technologies & Consulting (P) Limited
+    :copyright: (c) 2011-2013 by Openlabs Technologies & Consulting (P) Limited
     :license: GPLv3, see LICENSE for more details.
 """
 from uuid import uuid4
 
-from trytond.model import ModelSQL, ModelView, Workflow, fields
+from trytond.model import fields
 from trytond.tools import get_smtp_server
+from trytond.config import CONFIG
+from trytond.pool import PoolMeta
 
 from nereid import render_template, request, abort, login_required
 from nereid.contrib.pagination import Pagination
-from trytond.config import CONFIG
 from nereid.templating import render_email
 
 
-class Sale(Workflow, ModelSQL, ModelView):
+__all__ = ['Sale']
+__metaclass__ = PoolMeta
+
+
+class Sale:
     """Add Render and Render list"""
-    _name = 'sale.sale'
+    __name__ = 'sale.sale'
 
     #: This access code will be cross checked if the user is guest for a match
     #: to optionally display the order to an user who has not authenticated 
@@ -29,21 +34,22 @@ class Sale(Workflow, ModelSQL, ModelView):
 
     per_page = 10
 
+    @classmethod
     @login_required
-    def render_list(self, page=1):
+    def render_list(cls, page=1):
         """Render all orders
         """
         domain = [
             ('party', '=', request.nereid_user.party.id),
             ('state', '!=', 'draft'),
-            ]
+        ]
 
         # Handle order duration
 
-        sales = Pagination(self, domain, page, self.per_page)
+        sales = Pagination(cls, domain, page, cls.per_page)
         return render_template('sales.jinja', sales=sales)
 
-    def render(self, sale, confirmation=None):
+    def render(self, confirmation=None):
         """Render given sale order
 
         :param sale: ID of the sale Order
@@ -56,8 +62,6 @@ class Sale(Workflow, ModelSQL, ModelView):
         # parts of the code passed confirmation as a text
         confirmation = False if confirmation is None else True
 
-        sale = self.browse(sale)
-
         # Try to find if the user can be shown the order
         access_code = request.values.get('access_code', None)
 
@@ -65,31 +69,32 @@ class Sale(Workflow, ModelSQL, ModelView):
             if not access_code:
                 # No access code provided
                 abort(403)
-            if access_code != sale.guest_access_code:
+            if access_code != self.guest_access_code:
                 # Invalid access code
                 abort(403)
         else:
-            if sale.party.id != request.nereid_user.party.id:
+            if self.party.id != request.nereid_user.party.id:
                 # Order does not belong to the user
                 abort(403)
 
 
         return render_template(
-            'sale.jinja', sale=sale, confirmation=confirmation)
+            'sale.jinja', sale=self, confirmation=confirmation
+        )
 
-    def create_guest_access_code(self, sale):
+    def create_guest_access_code(self):
         """A guest access code must be written to the guest_access_code of the
         sale order so that it could be accessed wihtout a login
 
         :param sale: ID of the sale order
         """
         access_code = uuid4()
-        self.write(sale, {'guest_access_code': unicode(access_code)})
+        self.write([self], {'guest_access_code': unicode(access_code)})
         return access_code
 
-    def send_confirmation_email(self, sale):
-        """An email confirming that the order has been confirmed and that we 
-        are waiting for the payment confirmation if we are really waiting for 
+    def send_confirmation_email(self):
+        """An email confirming that the order has been confirmed and that we
+        are waiting for the payment confirmation if we are really waiting for
         it.
 
         For setting a convention this email has to be sent by rendering the
@@ -98,27 +103,25 @@ class Sale(Workflow, ModelSQL, ModelView):
            * Text: `emails/sale-confirmation-text.jinja`
            * HTML: `emails/sale-confirmation-html.jinja`
 
-        :param sale: The ID of the sale order
         """
         email_message = render_email(
-            CONFIG['smtp_from'], sale.invoice_address.email,
+            CONFIG['smtp_from'], self.invoice_address.email,
             'Order Completed',
             text_template = 'emails/sale-confirmation-text.jinja',
             html_template = 'emails/sale-confirmation-html.jinja',
-            sale = sale
+            sale = self
         )
         server = get_smtp_server()
         server.sendmail(
-            CONFIG['smtp_from'], [sale.invoice_address.email],
+            CONFIG['smtp_from'], [self.invoice_address.email],
             email_message.as_string()
         )
         server.quit()
 
-    def confirm(self, ids):
+    @classmethod
+    def confirm(cls, sales):
         "Send an email after sale is confirmed"
-        super(Sale, self).confirm(ids)
+        super(Sale, cls).confirm(sales)
 
-        for sale in self.browse(ids):
-            self.send_confirmation_email(sale)
-
-Sale()
+        for sale in sales:
+            sale.send_confirmation_email()
