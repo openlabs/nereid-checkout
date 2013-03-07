@@ -5,43 +5,48 @@
         and license terms.
     -->
 <tryton>
-  <data noupdate="1">
-  
-    <record id="checkout" model="nereid.url_rule">
-        <field name="rule">/&lt;language&gt;/checkout</field>
-        <field name="endpoint">nereid.checkout.default.checkout</field>
-        <field name="sequence" eval="50" />
-          <field name="methods">("GET", "POST")</field>
-        <field name="url_map" ref="nereid.default_url_map" />
-    </record>
-
-    <record id="order" model="nereid.url_rule">
-        <field name="rule">/&lt;language&gt;/order/&lt;int:sale&gt;</field>
-        <field name="endpoint">sale.sale.render</field>
-        <field name="sequence" eval="50" />
-        <field name="url_map" ref="nereid.default_url_map" />
-    </record>
-
-    <record id="sale_confirm" model="nereid.url_rule">
-        <field name="rule">/&lt;language&gt;/order/&lt;int:sale&gt;/&lt;confirmation&gt;</field>
-        <field name="endpoint">sale.sale.render</field>
-        <field name="sequence" eval="60" />
-        <field name="url_map" ref="nereid.default_url_map" />
-    </record>
+    <data>
     
-    <record id="orders" model="nereid.url_rule">
-        <field name="rule">/&lt;language&gt;/orders</field>
-        <field name="endpoint">sale.sale.render_list</field>
-        <field name="sequence" eval="50" />
-        <field name="url_map" ref="nereid.default_url_map" />
-    </record>
+        <record id="checkout" model="nereid.url_rule">
+            <field name="rule">/&lt;language&gt;/checkout</field>
+            <field name="endpoint">nereid.checkout.default.checkout</field>
+            <field name="sequence" eval="50" />
+            <field name="http_method_get" eval="True"/>
+            <field name="http_method_post" eval="True"/>
+            <field name="url_map" ref="nereid.default_url_map" />
+        </record>
 
-    <record id="orders_page" model="nereid.url_rule">
-        <field name="rule">/&lt;language&gt;/orders/&lt;int:page&gt;</field>
-        <field name="endpoint">sale.sale.render_list</field>
-        <field name="sequence" eval="50" />
-        <field name="url_map" ref="nereid.default_url_map" />
-    </record>
+        <record id="order" model="nereid.url_rule">
+            <field name="rule">/&lt;language&gt;/order/&lt;int:active_id&gt;</field>
+            <field name="endpoint">sale.sale.render</field>
+            <field name="sequence" eval="50" />
+            <field name="http_method_get" eval="True"/>
+            <field name="url_map" ref="nereid.default_url_map" />
+        </record>
 
-  </data>
+        <record id="sale_confirm" model="nereid.url_rule">
+            <field name="rule">/&lt;language&gt;/order/&lt;int:active_id&gt;/&lt;confirmation&gt;</field>
+            <field name="endpoint">sale.sale.render</field>
+            <field name="sequence" eval="60" />
+            <field name="http_method_get" eval="True"/>
+            <field name="url_map" ref="nereid.default_url_map" />
+        </record>
+        
+        <record id="orders" model="nereid.url_rule">
+            <field name="rule">/&lt;language&gt;/orders</field>
+            <field name="endpoint">sale.sale.render_list</field>
+            <field name="sequence" eval="50" />
+            <field name="http_method_get" eval="True"/>
+            <field name="url_map" ref="nereid.default_url_map" />
+        </record>
+
+        <record id="orders_page" model="nereid.url_rule">
+            <field name="rule">/&lt;language&gt;/orders/&lt;int:page&gt;</field>
+            <field name="endpoint">sale.sale.render_list</field>
+            <field name="sequence" eval="50" />
+            <field name="http_method_get" eval="True"/>
+            <field name="url_map" ref="nereid.default_url_map" />
+        </record>
+
+    </data>
 </tryton>
