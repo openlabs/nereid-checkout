@@ -18,9 +18,6 @@ from .forms import OneStepCheckoutRegd, OneStepCheckout
 __all__ = ['Checkout', 'DefaultCheckout']
 __metaclass__ = PoolMeta
 
-# pylint: disable-msg=E1101
-# pylint: disable-msg=R0201
-# pylint: disable-msg=W0232
 
 class Checkout(ModelSQL, ModelView):
     "Checkout Register"
@@ -33,7 +30,6 @@ class Checkout(ModelSQL, ModelView):
         'ir.model', 'Model', required=True,
         domain=[('model', 'like', 'nereid.checkout.%')]
     )
-
 
 
 class DefaultCheckout(ModelSQL):
@@ -108,8 +104,10 @@ class DefaultCheckout(ModelSQL):
         By default, the behavior is NOT to allow such checkouts and instead
         flash a message and quit
         """
-        flash(_('A registration already exists with this email. '
-            'Please login or contact customer care'))
+        flash(_(
+            'A registration already exists with this email. '
+            'Please login or contact customer care'
+        ))
         abort(redirect(url_for('nereid.checkout.default.checkout')))
 
     @classmethod
@@ -245,8 +243,8 @@ class DefaultCheckout(ModelSQL):
             flash(_("Add some items to your cart before you checkout!"))
             return redirect(url_for('nereid.website.home'))
         if request.method == 'GET':
-            return (cls._begin_guest() if request.is_guest_user \
-                else cls._begin_registered())
+            return request.is_guest_user and cls._begin_guest() \
+                or cls._begin_registered()
 
         elif request.method == 'POST':
             form, do_process = cls._submit_guest() if request.is_guest_user \
@@ -257,7 +255,7 @@ class DefaultCheckout(ModelSQL):
 
                 # Process Payment, if the returned value from the payment
                 # is a response object (isinstance) then return that instead
-                # of the success page. This will allow reidrects to a third 
+                # of the success page. This will allow reidrects to a third
                 # party gateway or service to collect payment.
                 response = cls._process_payment(sale, form)
                 if isinstance(response, BaseResponse):
