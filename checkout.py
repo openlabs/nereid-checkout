@@ -87,7 +87,7 @@ class DefaultCheckout(ModelSQL):
 
         The payment must be processed based on the following fields:
 
-        :param sale: Browse Record of Sale Order
+        :param sale: Active Record of Sale Order
         :param form: Instance of validated form
         """
         pass
@@ -131,17 +131,18 @@ class DefaultCheckout(ModelSQL):
         data['country'] = data.pop('country')
         data['subdivision'] = data.pop('subdivision')
         data['party'] = request.nereid_user.party.id
-        ContactMechanism.create({
-            'type': 'email',
-            'party': request.nereid_user.party.id,
-            'email': email,
-        })
-        ContactMechanism.create({
-            'type': 'phone',
-            'party': request.nereid_user.party.id,
-            'value': phone,
-        })
-        address = Address.create(data)
+        ContactMechanism.create([
+            {
+                'type': 'email',
+                'party': request.nereid_user.party.id,
+                'email': email,
+            }, {
+                'type': 'phone',
+                'party': request.nereid_user.party.id,
+                'value': phone,
+            }
+        ])
+        address, = Address.create([data])
         Address.write([address], {'email': email, 'phone': phone})
 
         return address
