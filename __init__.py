@@ -9,8 +9,8 @@
 '''
 from trytond.pool import Pool
 
-from .sale import *
-from .checkout import *
+from sale import Sale
+from checkout import Checkout, DefaultCheckout
 
 
 def register():

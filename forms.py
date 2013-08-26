@@ -15,7 +15,7 @@ from wtforms.validators import StopValidation
 from .i18n import _, get_translations
 
 
-_REQD = [validators.Required(message=_("This field is required")),]
+_REQD = [validators.Required(message=_("This field is required"))]
 
 
 class IgnoreIfTrueMixin(object):
@@ -54,6 +54,7 @@ class PreValidatedFormField(FormField):
 
         return super(PreValidatedFormField, self).validate(
             form, extra_validators)
+
 
 class DummyPostData(dict):
     """
@@ -140,14 +141,16 @@ class AddressChoiceForm(Form):
         """
         return get_translations()
 
-    address = SelectField(_('Select Address'),
-        choices=[('0', _('New Address'))],
-        coerce=int, validators=_REQD)
+    address = SelectField(
+        _('Select Address'),
+        choices=[('0', _('New Address'))], coerce=int, validators=_REQD
+    )
     new_address = FormField(AddressForm)
 
 
 class IgnoreIfTrueFormField(IgnoreIfTrueMixin, PreValidatedFormField):
-    """Ignores validation if given condition is True
+    """
+    Ignores validation if given condition is True
     """
     pass
 
@@ -185,7 +188,8 @@ class OneStepCheckout(Form):
     """
 
     def _get_translations(self):
-        """Provide alternate translations factory.
+        """
+        Provide alternate translations factory.
         """
         return get_translations()
 
@@ -265,18 +269,22 @@ class OneStepCheckoutRegd(OneStepCheckout):
         """
         return get_translations()
 
-    billing_address = SelectField(_('Billing Address'), coerce=int,
-        choices=[(0, _('New Address'))])
+    billing_address = SelectField(
+        _('Billing Address'), coerce=int,
+        choices=[(0, _('New Address'))]
+    )
     new_billing_address = IgnoreIfTrueFormField(
         'form.billing_address.data != 0', AddressForm)
 
     shipping_address = IgnoreIfTrueSelectField(
         'form.shipping_same_as_billing.data == True',
         _('Shipping Address'), coerce=int,
-        choices=[(0, _('New Address'))])
+        choices=[(0, _('New Address'))]
+    )
     new_shipping_address = IgnoreIfTrueFormField(
         'form.shipping_same_as_billing.data or form.shipping_address.data != 0',
-        AddressForm)
+        AddressForm
+    )
 
 
 if __name__ == '__main__':

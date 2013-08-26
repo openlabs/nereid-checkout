@@ -96,27 +96,32 @@ minor_version = int(minor_version)
 requires = []
 for dep in info.get('depends', []):
     if not re.match(r'(ir|res|webdav)(\W|$)', dep):
-        requires.append('trytond_%s >= %s.%s, < %s.%s' %
-                (dep, major_version, minor_version, major_version,
-                    minor_version + 1))
-requires.append('trytond >= %s.%s, < %s.%s' %
-        (major_version, minor_version, major_version, minor_version + 1))
+        requires.append(
+            'trytond_%s >= %s.%s, < %s.%s' % (
+                dep, major_version, minor_version, major_version,
+                minor_version + 1
+            )
+        )
+requires.append(
+    'trytond >= %s.%s, < %s.%s' % (
+        major_version, minor_version, major_version, minor_version + 1
+    )
+)
 
-setup(name='trytond_nereid_checkout',
+setup(
+    name='trytond_nereid_checkout',
     version=info.get('version', '0.0.1'),
-    description=info.get('description', ''),
-    author=info.get('author', ''),
-    author_email=info.get('email', ''),
-    url=info.get('website', ''),
-    download_url="http://downloads.openlabs.co.in/" + \
-            info.get('version', '0.0.1').rsplit('.', 1)[0] + '/',
+    description="Nereid Checkout",
+    author="Openlabs Technologies & consulting (P) Limited",
+    author_email='info@openlabs.co.in',
+    url='http://www.openlabs.co.in',
     package_dir={'trytond.modules.nereid_checkout': '.'},
     packages=[
         'trytond.modules.nereid_checkout',
         'trytond.modules.nereid_checkout.tests',
     ],
     package_data={
-        'trytond.modules.nereid_checkout': info.get('xml', []) \
+        'trytond.modules.nereid_checkout': info.get('xml', [])
                 + info.get('translation', [])
                 + ['tryton.cfg', 'locale/*.po', 'tests/*.rst'],
     },
