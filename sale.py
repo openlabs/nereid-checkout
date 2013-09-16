@@ -29,7 +29,7 @@ class Sale:
     __name__ = 'sale.sale'
 
     #: This access code will be cross checked if the user is guest for a match
-    #: to optionally display the order to an user who has not authenticated 
+    #: to optionally display the order to an user who has not authenticated
     #: as yet
     guest_access_code = fields.Char('Guest Access Code')
 
@@ -78,7 +78,6 @@ class Sale:
                 # Order does not belong to the user
                 abort(403)
 
-
         return render_template(
             'sale.jinja', sale=self, confirmation=confirmation
         )
@@ -108,9 +107,9 @@ class Sale:
         email_message = render_email(
             CONFIG['smtp_from'], self.invoice_address.email,
             'Order Completed',
-            text_template = 'emails/sale-confirmation-text.jinja',
-            html_template = 'emails/sale-confirmation-html.jinja',
-            sale = self
+            text_template='emails/sale-confirmation-text.jinja',
+            html_template='emails/sale-confirmation-html.jinja',
+            sale=self
         )
         server = get_smtp_server()
         server.sendmail(
