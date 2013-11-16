@@ -8,7 +8,7 @@
     <data>
     
         <record id="checkout" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/checkout</field>
+            <field name="rule">/checkout</field>
             <field name="endpoint">nereid.checkout.default.checkout</field>
             <field name="sequence" eval="50" />
             <field name="http_method_get" eval="True"/>
@@ -17,7 +17,7 @@
         </record>
 
         <record id="order" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/order/&lt;int:active_id&gt;</field>
+            <field name="rule">/order/&lt;int:active_id&gt;</field>
             <field name="endpoint">sale.sale.render</field>
             <field name="sequence" eval="50" />
             <field name="http_method_get" eval="True"/>
@@ -25,7 +25,7 @@
         </record>
 
         <record id="sale_confirm" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/order/&lt;int:active_id&gt;/&lt;confirmation&gt;</field>
+            <field name="rule">/order/&lt;int:active_id&gt;/&lt;confirmation&gt;</field>
             <field name="endpoint">sale.sale.render</field>
             <field name="sequence" eval="60" />
             <field name="http_method_get" eval="True"/>
@@ -33,7 +33,7 @@
         </record>
         
         <record id="orders" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/orders</field>
+            <field name="rule">/orders</field>
             <field name="endpoint">sale.sale.render_list</field>
             <field name="sequence" eval="50" />
             <field name="http_method_get" eval="True"/>
@@ -41,7 +41,7 @@
         </record>
 
         <record id="orders_page" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/orders/&lt;int:page&gt;</field>
+            <field name="rule">/orders/&lt;int:page&gt;</field>
             <field name="endpoint">sale.sale.render_list</field>
             <field name="sequence" eval="50" />
             <field name="http_method_get" eval="True"/>
