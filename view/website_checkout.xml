@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!-- This file is part of Nereid.  The COPYRIGHT file at the top level of
+this repository contains the full copyright notices and license terms. -->
+<data>
+    <xpath expr="/form/notebook" position="inside">
+        <page string="Checkout Configuration" id="checkout">
+            <separator colspan="4" string="Credit Card"
+              id="credit_card"/>
+            <label name="accept_credit_card"/>
+            <field name="accept_credit_card"/>
+            <label name="save_payment_profile"/>
+            <field name="save_payment_profile"/>
+            <label name="credit_card_gateway"/>
+            <field name="credit_card_gateway" xfill="1"/>
+            <separator colspan="4" string="Alternative Payment Methods" 
+                id="payment_methods"/>
+            <field name="alternate_payment_methods" colspan="4"/>
+        </page>
+    </xpath>
+</data>
