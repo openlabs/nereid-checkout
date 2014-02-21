@@ -7,58 +7,62 @@
 <tryton>
     <data>
 
-        <record model="ir.ui.view" id="checkout_view_form">
-            <field name="model">nereid.checkout</field>
+        <record model="ir.ui.view" id="payment_method_view_form">
+            <field name="model">nereid.website.payment_method</field>
             <field name="type">form</field>
             <field name="arch" type="xml">
                 <![CDATA[
-                <form string="Checkout">
+                <form string="Payment Method">
                     <label name="name" />
                     <field name="name" />
-                    <label name="model" />
-                    <field name="model" />
-                    <label name="active" />
-                    <field name="active" />
-                    <label name="is_allowed_for_guest" />
-                    <field name="is_allowed_for_guest" />
+                    <label name="sequence" />
+                    <field name="sequence" />
+                    <label name="gateway" />
+                    <field name="gateway" />
+                    <label name="website" />
+                    <field name="website" />
+                    <separator colspan="4" string="Instructions" id="instructions"/>
+                    <field name="instructions" colspan="4"/>
                 </form>
                 ]]>
             </field>
         </record> 
 
-        <record model="ir.ui.view" id="checkout_view_tree">
-            <field name="model">nereid.checkout</field>
+        <record model="ir.ui.view" id="payment_method_view_tree">
+            <field name="model">nereid.website.payment_method</field>
             <field name="type">tree</field>
             <field name="arch" type="xml">
                 <![CDATA[
-                <tree string="Checkout">
+                <tree string="Payment Methods">
+                    <field name="sequence" />
                     <field name="name" />
-                    <field name="model" />
-                    <field name="active" />
-                    <field name="is_allowed_for_guest" />
+                    <field name="gateway" />
+                    <field name="website" />
                 </tree>
                 ]]>
             </field>
         </record>
         
-        <record model="ir.action.act_window" id="act_checkout_form">
-            <field name="name">checkout</field>
-            <field name="res_model">nereid.checkout</field>
+        <record model="ir.action.act_window" id="act_payment_method_form">
+            <field name="name">Payment Methods</field>
+            <field name="res_model">nereid.website.payment_method</field>
         </record>
-        <record model="ir.action.act_window.view" id="act_checkout_form_view1">
+        <record model="ir.action.act_window.view" id="act_payment_method_form_view1">
             <field name="sequence" eval="10" />
-            <field name="view" ref="checkout_view_tree" />
-            <field name="act_window" ref="act_checkout_form" />
+            <field name="view" ref="payment_method_view_tree" />
+            <field name="act_window" ref="act_payment_method_form" />
         </record>
-        <record model="ir.action.act_window.view" id="act_checkout_form_view2">
+        <record model="ir.action.act_window.view" id="act_payment_method_form_view2">
             <field name="sequence" eval="20" />
-            <field name="view" ref="checkout_view_form" />
-            <field name="act_window" ref="act_checkout_form" />
+            <field name="view" ref="payment_method_view_form" />
+            <field name="act_window" ref="act_payment_method_form" />
         </record>
 
-        <menuitem parent="nereid.menu_nereid_configuration" 
-          action="act_checkout_form"
-          id="menu_checkout_tree" />
+        <record id="inherit_nereid_website_checkout" model="ir.ui.view">
+            <field name="model">nereid.website</field>
+            <field name="inherit" ref="nereid.website_view_form"/>
+            <field name="name">website_checkout</field>
+        </record>
 
     </data>
 </tryton>

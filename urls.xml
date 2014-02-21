@@ -7,9 +7,45 @@
 <tryton>
     <data>
     
-        <record id="checkout" model="nereid.url_rule">
-            <field name="rule">/checkout</field>
-            <field name="endpoint">nereid.checkout.default.checkout</field>
+        <record id="checkout_signin" model="nereid.url_rule">
+            <field name="rule">/checkout/sign-in</field>
+            <field name="endpoint">nereid.checkout.sign_in</field>
+            <field name="sequence" eval="50" />
+            <field name="http_method_get" eval="True"/>
+            <field name="http_method_post" eval="True"/>
+            <field name="url_map" ref="nereid.default_url_map" />
+        </record>
+
+        <record id="checkout_shipping_address" model="nereid.url_rule">
+            <field name="rule">/checkout/shipping-address</field>
+            <field name="endpoint">nereid.checkout.shipping_address</field>
+            <field name="sequence" eval="50" />
+            <field name="http_method_get" eval="True"/>
+            <field name="http_method_post" eval="True"/>
+            <field name="url_map" ref="nereid.default_url_map" />
+        </record>
+
+        <record id="checkout_delivery_method" model="nereid.url_rule">
+            <field name="rule">/checkout/delivery-method</field>
+            <field name="endpoint">nereid.checkout.delivery_method</field>
+            <field name="sequence" eval="50" />
+            <field name="http_method_get" eval="True"/>
+            <field name="http_method_post" eval="True"/>
+            <field name="url_map" ref="nereid.default_url_map" />
+        </record>
+
+        <record id="checkout_billing_address" model="nereid.url_rule">
+            <field name="rule">/checkout/billing-address</field>
+            <field name="endpoint">nereid.checkout.billing_address</field>
+            <field name="sequence" eval="50" />
+            <field name="http_method_get" eval="True"/>
+            <field name="http_method_post" eval="True"/>
+            <field name="url_map" ref="nereid.default_url_map" />
+        </record>
+
+        <record id="checkout_payment_method" model="nereid.url_rule">
+            <field name="rule">/checkout/payment</field>
+            <field name="endpoint">nereid.checkout.payment_method</field>
             <field name="sequence" eval="50" />
             <field name="http_method_get" eval="True"/>
             <field name="http_method_post" eval="True"/>

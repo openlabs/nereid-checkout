@@ -14,7 +14,7 @@ from trytond.tools import get_smtp_server
 from trytond.config import CONFIG
 from trytond.pool import PoolMeta
 
-from nereid import render_template, request, abort, login_required
+from nereid import render_template, request, abort, login_required, current_app
 from nereid.contrib.pagination import Pagination
 from nereid.templating import render_email
 from nereid.ctx import has_request_context
@@ -92,7 +92,7 @@ class Sale:
         self.write([self], {'guest_access_code': unicode(access_code)})
         return access_code
 
-    def send_confirmation_email(self):
+    def send_confirmation_email(self, silent=True):
         """An email confirming that the order has been confirmed and that we
         are waiting for the payment confirmation if we are really waiting for
         it.
@@ -104,19 +104,24 @@ class Sale:
            * HTML: `emails/sale-confirmation-html.jinja`
 
         """
-        email_message = render_email(
-            CONFIG['smtp_from'], self.invoice_address.email,
-            'Order Completed',
-            text_template='emails/sale-confirmation-text.jinja',
-            html_template='emails/sale-confirmation-html.jinja',
-            sale=self
-        )
-        server = get_smtp_server()
-        server.sendmail(
-            CONFIG['smtp_from'], [self.invoice_address.email],
-            email_message.as_string()
-        )
-        server.quit()
+        try:
+            email_message = render_email(
+                CONFIG['smtp_from'], self.invoice_address.email,
+                'Order Completed',
+                text_template='emails/sale-confirmation-text.jinja',
+                html_template='emails/sale-confirmation-html.jinja',
+                sale=self
+            )
+            server = get_smtp_server()
+            server.sendmail(
+                CONFIG['smtp_from'], [self.invoice_address.email],
+                email_message.as_string()
+            )
+            server.quit()
+        except Exception, exc:
+            if not silent:
+                raise
+            current_app.logger.error(exc)
 
     @classmethod
     def confirm(cls, sales):
