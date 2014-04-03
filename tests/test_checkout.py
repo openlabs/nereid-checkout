@@ -166,7 +166,6 @@ class TestCheckoutSignIn(BaseTestCheckout):
                     '/checkout/sign-in', data={'email': 'new@openlabs.co.in'}
                 )
                 self.assertEqual(rv.status_code, 302)
-                print rv.location
 
     def test_0035_guest_checkout_with_regd_email(self):
         """When the user is guest and uses a registered email in the guest
@@ -275,11 +274,11 @@ class TestCheckoutSignIn(BaseTestCheckout):
                     rv.location.endswith('/checkout/shipping-address')
                 )
 
-    def test_0060_older_signins_require_auth(self):
-        "Older signins will have a forced auth"
+    def test_0060_nonfresh_signins_require_auth(self):
+        "Not fresh will have a forced auth"
         with Transaction().start(DB_NAME, USER, CONTEXT):
             self.setup_defaults()
-            app = self.get_app()
+            app = self.get_app(REMEMBER_COOKIE_NAME='remember')
 
             with app.test_client() as c:
                 c.post(
@@ -287,10 +286,26 @@ class TestCheckoutSignIn(BaseTestCheckout):
                         'product': self.product1.id, 'quantity': 5
                     }
                 )
+                rv = c.post(
+                    '/checkout/sign-in', data={
+                        'email': 'email@example.com',
+                        'password': 'password',
+                        'checkout_mode': 'account',
+                    }
+                )
+                rv = c.get('/checkout/sign-in')
+                self.assertEqual(rv.status_code, 302)
+                self.assertTrue(
+                    rv.location.endswith('/checkout/shipping-address')
+                )
 
-                self.login(c, 'email@example.com', 'password')
+                # Simulate a browser close by clearing the _fresh tag in
+                # the session
+                with c.session_transaction() as sess:
+                    sess.pop('_fresh')
 
-                # Sign in again because signin time wasnt set
+                # Sign in page now sees a login which isn't fresh
+                # So render the page itself.
                 rv = c.get('/checkout/sign-in')
                 self.assertEqual(rv.status_code, 200)
 
@@ -1358,7 +1373,6 @@ class TestCheckoutPayment(BaseTestCheckout):
 
                 # POST redirects to billing address
                 rv = c.post('/checkout/payment', data={})
-                print rv.data, type(rv.data)
 
                 # redirect to shipment address page
                 self.assertEqual(rv.status_code, 302)

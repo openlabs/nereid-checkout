@@ -11,10 +11,12 @@ from datetime import datetime
 from functools import wraps
 
 from nereid import render_template, request, url_for, flash, redirect, \
-    login_required, current_app
-from nereid.signals import login, logout, failed_login
+    login_required, current_app, current_user
+from nereid.signals import failed_login
 from nereid.globals import session
-from wtforms import Form, TextField, RadioField, validators, PasswordField, \
+from flask.ext.login import login_user, login_fresh
+from flask_wtf import Form
+from wtforms import TextField, RadioField, validators, PasswordField, \
     ValidationError, SelectField, BooleanField
 from werkzeug.wrappers import BaseResponse
 from trytond.model import ModelView, fields
@@ -65,15 +67,20 @@ def recent_signin(function):
     """
     Ensure that the session for the registered user is recent.
 
-    If you want to change the time duration, subclass and implement the
+    The functionality is similar to fresh_login_required provided by
+    Flask-Login expect that the check is done only when a registered user
+    tries to checkout.
+
+    The guest user does not require to have a recent signin check
+
     :meth:`Checkout.is_recent_signin` method.
     """
     @wraps(function)
     def wrapper(*args, **kwargs):
-        Checkout = Pool().get('nereid.checkout')
-        if not request.is_guest_user:
-            sign_in_at = session.get('checkout-sign-in-at', datetime.min)
-            if not Checkout.is_recent_signin(sign_in_at):
+        if not current_user.is_anonymous():
+            # Check only for logged in users. Guest checkouts are always
+            # fresh ;-)
+            if not login_fresh():
                 current_app.logger.debug(
                     'No recent sign-in. Redirect to sign-in'
                 )
@@ -209,6 +216,7 @@ class CheckoutSignInForm(Form):
             ('account', _('Use my account')),
         ]
     )
+    remember = BooleanField(_('Remember Me'))
 
     def validate_password(self, field):
         if self.checkout_mode.data == 'account' and not field.data:
@@ -218,25 +226,6 @@ class CheckoutSignInForm(Form):
 class Checkout(ModelView):
     'A checkout model'
     __name__ = 'nereid.checkout'
-
-    @classmethod
-    def is_recent_signin(cls, sign_in_time):
-        """
-        Returns True if the signin time given is considered recent enough.
-
-        :param sign_in_time: UTC Datetime instance
-        """
-        return (datetime.utcnow() - sign_in_time).total_seconds() < 60 * 60
-
-    @staticmethod
-    @logout.connect
-    @failed_login.connect
-    def clear_signin_time(*args, **kwargs):
-        """
-        Clear the time so that the next checkout does not loop between signin
-        and shipment
-        """
-        session.pop('checkout-sign-in-at', None)
 
     @classmethod
     @not_empty_cart
@@ -273,19 +262,17 @@ class Checkout(ModelView):
 
         if not request.is_guest_user:
             form = CheckoutSignInForm(
-                request.form,
-                email=request.nereid_user.email,
+                email=current_user.email,
                 checkout_mode='account',
             )
         else:
             # Guest user
             form = CheckoutSignInForm(
-                request.form,
                 email=session.get('email'),
                 checkout_mode='guest',
             )
 
-        if request.method == 'POST' and form.validate():
+        if form.validate_on_submit():
             if form.checkout_mode.data == 'guest':
                 existing = NereidUser.search([
                     ('email', '=', form.email.data),
@@ -327,25 +314,23 @@ class Checkout(ModelView):
                     url_for('nereid.checkout.shipping_address')
                 )
             else:
-                print "Authenticating user"
                 # The user wants to use existing email to login
-                result = NereidUser.authenticate(
+                user = NereidUser.authenticate(
                     form.email.data, form.password.data
                 )
-                print "result", result
-                if result:
-                    session['user'] = result.id
-                    session['email'] = form.email.data
-                    session['checkout-sign-in-at'] = datetime.utcnow()
-                    login.send()
+                if user:
+                    # FIXME: Remove remember_me
+                    login_user(user, remember=form.remember.data)
                     return redirect(
                         url_for('nereid.checkout.shipping_address')
                     )
                 else:
                     failed_login.send()
 
-        if cls.is_recent_signin(
-                session.get('checkout-sign-in-at', datetime.min)):
+        if not current_user.is_anonymous() and login_fresh():
+            # Registered user with a fresh login can directly proceed to
+            # step 2, which is filling the shipping address
+            #
             # if this is a recent sign-in by a registred user
             # automatically proceed to the shipping_address step
             return redirect(url_for('nereid.checkout.shipping_address'))
@@ -437,8 +422,6 @@ class Checkout(ModelView):
                     else:
                         address = Address()
 
-                    print "saving to address", address, address_form.data
-
                     address.party = cart.sale.party
                     address.name = address_form.name.data
                     address.street = address_form.street.data
@@ -460,7 +443,7 @@ class Checkout(ModelView):
 
         addresses = []
         if not request.is_guest_user:
-            addresses.extend(request.nereid_user.party.addresses)
+            addresses.extend(current_user.party.addresses)
 
         return render_template(
             'checkout/shipping_address.jinja',
@@ -565,7 +548,7 @@ class Checkout(ModelView):
 
         addresses = []
         if not request.is_guest_user:
-            addresses.extend(request.nereid_user.party.addresses)
+            addresses.extend(current_user.party.addresses)
 
         return render_template(
             'checkout/billing_address.jinja',
@@ -578,7 +561,7 @@ class Checkout(ModelView):
         '''
         Return a credit card form.
         '''
-        return CreditCardForm(request.form)
+        return CreditCardForm()
 
     @classmethod
     def get_payment_form(cls):
@@ -589,7 +572,7 @@ class Checkout(ModelView):
 
         cart = NereidCart.open_cart()
 
-        payment_form = PaymentForm(request.form)
+        payment_form = PaymentForm()
 
         # add possible alternate payment_methods
         payment_form.alternate_payment_method.choices = [
@@ -600,12 +583,11 @@ class Checkout(ModelView):
         if not request.is_guest_user:
             payment_form.payment_profile.choices = [
                 (p.id, p.rec_name) for p in
-                request.nereid_user.party.get_payment_profiles()
+                current_user.party.get_payment_profiles()
             ]
 
         if (cart.sale.shipment_address == cart.sale.invoice_address) or (
                 not cart.sale.invoice_address):
-            print "use shipping address"
             payment_form.use_shipment_address.data = "y"
 
         return payment_form
@@ -721,7 +703,7 @@ class Checkout(ModelView):
             profile_wiz.card_info.expiry_month = \
                 credit_card_form.expiry_month.data
             profile_wiz.card_info.expiry_year = \
-                credit_card_form.expiry_year.data
+                unicode(credit_card_form.expiry_year.data)
             profile_wiz.card_info.csc = credit_card_form.cvv.data
 
             with Transaction().set_context(return_profile=True):
@@ -747,7 +729,7 @@ class Checkout(ModelView):
         use_card_wiz.card_info.expiry_month = \
             credit_card_form.expiry_month.data
         use_card_wiz.card_info.expiry_year = \
-            credit_card_form.expiry_year.data
+            unicode(credit_card_form.expiry_year.data)
         use_card_wiz.card_info.csc = credit_card_form.cvv.data
 
         with Transaction().set_context(active_id=payment_transaction.id):
@@ -796,7 +778,7 @@ class Checkout(ModelView):
 
         payment_profile = PaymentProfile(payment_profile_id)
 
-        if payment_profile.party != request.nereid_user.party:
+        if payment_profile.party != current_user.party:
             # verify that the payment profile belongs to the registered
             # user.
             flash(_('The payment profile chosen is invalid'))
