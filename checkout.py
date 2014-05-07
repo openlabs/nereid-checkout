@@ -11,7 +11,7 @@ from datetime import datetime
 from functools import wraps
 
 from nereid import render_template, request, url_for, flash, redirect, \
-    login_required, current_app, current_user
+    login_required, current_app, current_user, route
 from nereid.signals import failed_login
 from nereid.globals import session
 from flask.ext.login import login_user, login_fresh
@@ -228,6 +228,7 @@ class Checkout(ModelView):
     __name__ = 'nereid.checkout'
 
     @classmethod
+    @route('/checkout/sign-in', methods=['GET', 'POST'])
     @not_empty_cart
     def sign_in(cls):
         '''
@@ -359,6 +360,7 @@ class Checkout(ModelView):
         return Address.get_address_form(address)
 
     @classmethod
+    @route('/checkout/shipping-address', methods=['GET', 'POST'])
     @recent_signin
     @not_empty_cart
     @sale_has_non_guest_party
@@ -452,6 +454,7 @@ class Checkout(ModelView):
         )
 
     @classmethod
+    @route('/checkout/delivery-method', methods=['GET', 'POST'])
     @not_empty_cart
     @recent_signin
     @sale_has_non_guest_party
@@ -475,6 +478,7 @@ class Checkout(ModelView):
         return redirect(url_for('nereid.checkout.payment_method'))
 
     @classmethod
+    @route('/checkout/billing-address', methods=['GET', 'POST'])
     @not_empty_cart
     @recent_signin
     @sale_has_non_guest_party
@@ -593,6 +597,7 @@ class Checkout(ModelView):
         return payment_form
 
     @classmethod
+    @route('/checkout/payment', methods=['GET', 'POST'])
     @not_empty_cart
     @recent_signin
     @sale_has_non_guest_party

@@ -4,7 +4,7 @@
 
     Additional Changes to sale
 
-    :copyright: (c) 2011-2013 by Openlabs Technologies & Consulting (P) Limited
+    :copyright: (c) 2011-2014 by Openlabs Technologies & Consulting (P) Limited
     :license: GPLv3, see LICENSE for more details.
 """
 from uuid import uuid4
@@ -14,7 +14,8 @@ from trytond.tools import get_smtp_server
 from trytond.config import CONFIG
 from trytond.pool import PoolMeta
 
-from nereid import render_template, request, abort, login_required, current_app
+from nereid import render_template, request, abort, login_required, \
+    current_app, route
 from nereid.contrib.pagination import Pagination
 from nereid.templating import render_email
 from nereid.ctx import has_request_context
@@ -36,6 +37,8 @@ class Sale:
     per_page = 10
 
     @classmethod
+    @route('/orders')
+    @route('/orders/<int:page>')
     @login_required
     def render_list(cls, page=1):
         """Render all orders
@@ -50,6 +53,8 @@ class Sale:
         sales = Pagination(cls, domain, page, cls.per_page)
         return render_template('sales.jinja', sales=sales)
 
+    @route('/order/<int:active_id>')
+    @route('/order/<int:active_id>/<confirmation>')
     def render(self, confirmation=None):
         """Render given sale order
 

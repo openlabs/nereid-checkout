@@ -29,6 +29,7 @@ major_version = int(major_version)
 minor_version = int(minor_version)
 
 requires = [
+    'trytond_nereid>=3.0.7.0',
 ]
 
 MODULE = 'nereid_checkout'
@@ -97,5 +98,6 @@ setup(
             major_version, minor_version, major_version, minor_version + 1
         ),
         'pycountry',
+        'mock',
     ],
 )
