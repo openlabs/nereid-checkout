@@ -167,6 +167,9 @@ class TestCheckoutSignIn(BaseTestCheckout):
                 )
                 self.assertEqual(rv.status_code, 302)
 
+                party, = self.Party.search([], order=[('id', 'DESC')], limit=1)
+                self.assertEqual(party.email, 'new@openlabs.co.in')
+
     def test_0035_guest_checkout_with_regd_email(self):
         """When the user is guest and uses a registered email in the guest
         checkout, the default behavior is to show a help page in the

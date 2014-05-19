@@ -295,8 +295,11 @@ class Checkout(ModelView):
                     party, = Party.create([{
                         'name': party_name,
                         'nereid_session': session.sid,
-                        'email': form.email.data,
                         'addresses': [],
+                        'contact_mechanisms': [('create', [{
+                            'type': 'email',
+                            'value': form.email.data,
+                        }])]
                     }])
 
                     cart.sale.party = party
@@ -308,6 +311,14 @@ class Checkout(ModelView):
                     # Perhaps the email changed ?
                     party = cart.sale.party
                     party.name = party_name
+
+                    # contact_mechanism of email type will always be there for
+                    # Guest user
+                    contact_mechanism = filter(
+                        lambda c: c.type == 'email', party.contact_mechanisms
+                    )[0]
+                    contact_mechanism.value = form.email.data
+                    contact_mechanism.save()
                     party.email = form.email.data
                     party.save()
 
