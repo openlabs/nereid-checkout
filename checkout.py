@@ -608,6 +608,44 @@ class Checkout(ModelView):
         return payment_form
 
     @classmethod
+    def _process_payment(cls, cart):
+        """
+        This is separated so that other modules can easily modify the
+        behavior of processing payment independent of this module.
+        """
+        payment_form = cls.get_payment_form()
+        credit_card_form = cls.get_credit_card_form()
+
+        if not request.is_guest_user and payment_form.payment_profile.data:
+            # Regd. user with payment_profile
+            rv = cls.complete_using_profile(
+                payment_form.payment_profile.data
+            )
+            if isinstance(rv, BaseResponse):
+                # Redirects only if payment profile is invalid.
+                # Then do not confirm the order, just redirect
+                return rv
+            return cls.confirm_cart(cart)
+
+        elif payment_form.alternate_payment_method.data:
+            # Checkout using alternate payment method
+            rv = cls.complete_using_alternate_payment_method(
+                payment_form
+            )
+            if isinstance(rv, BaseResponse):
+                # If the alternate payment method introduced a
+                # redirect, then save the order and go to that
+                cls.confirm_cart(cart)
+                return rv
+            return cls.confirm_cart(cart)
+
+        elif request.nereid_website.credit_card_gateway and \
+                credit_card_form.validate():
+            # validate the credit card form and checkout using that
+            cls.complete_using_credit_card(credit_card_form)
+            return cls.confirm_cart(cart)
+
+    @classmethod
     @route('/checkout/payment', methods=['GET', 'POST'])
     @not_empty_cart
     @recent_signin
@@ -642,34 +680,10 @@ class Checkout(ModelView):
                 # with this
                 return redirect(url_for('nereid.checkout.billing_address'))
 
-            if not request.is_guest_user and payment_form.payment_profile.data:
-                # Regd. user with payment_profile
-                rv = cls.complete_using_profile(
-                    payment_form.payment_profile.data
-                )
-                if isinstance(rv, BaseResponse):
-                    # Redirects only if payment profile is invalid.
-                    # Then do not confirm the order, just redirect
-                    return rv
-                return cls.confirm_cart(cart)
-
-            elif payment_form.alternate_payment_method.data:
-                # Checkout using alternate payment method
-                rv = cls.complete_using_alternate_payment_method(
-                    payment_form
-                )
-                if isinstance(rv, BaseResponse):
-                    # If the alternate payment method introduced a
-                    # redirect, then save the order and go to that
-                    cls.confirm_cart(cart)
-                    return rv
-                return cls.confirm_cart(cart)
-
-            elif request.nereid_website.credit_card_gateway and \
-                    credit_card_form.validate():
-                # validate the credit card form and checkout using that
-                cls.complete_using_credit_card(credit_card_form)
-                return cls.confirm_cart(cart)
+            rv = cls._process_payment(cart)
+            if isinstance(rv, BaseResponse):
+                # Return if BaseResponse
+                return rv
 
             flash(_("Error is processing payment."), "warning")
 
