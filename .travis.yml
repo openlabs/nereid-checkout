@@ -9,7 +9,7 @@ install:
 script:
   - flake8 .
   - coverage run setup.py test
-  - coverage report -m --fail-under 77
+  - coverage report -m --fail-under 90
 after_success:
   coveralls
 notifications:
