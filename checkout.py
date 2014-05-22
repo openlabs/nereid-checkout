@@ -704,10 +704,14 @@ class Checkout(ModelView):
         '''
         Sale = Pool().get('sale.sale')
 
+        sale = cart.sale
+        access_code = None
+
+        if current_user.is_anonymous():
+            access_code = unicode(sale.create_guest_access_code())
+
         Sale.quote([cart.sale])
         Sale.confirm([cart.sale])
-
-        sale = cart.sale
 
         cart.sale = None
         cart.save()
@@ -717,18 +721,8 @@ class Checkout(ModelView):
             "Your order #%(sale)s has been processed",
             sale=sale.reference
         ))
-        if request.is_guest_user:
-            access_code = sale.create_guest_access_code()
-            return redirect(url_for(
-                'sale.sale.render',
-                active_id=sale.id,
-                confirmation=True,
-                access_code=unicode(access_code),
-            ))
-        else:
-            return redirect(
-                url_for(
-                    'sale.sale.render', active_id=sale.id,
-                    confirmation=True
-                )
-            )
+
+        return redirect(url_for(
+            'sale.sale.render', active_id=sale.id, confirmation=True,
+            access_code=access_code,
+        ))
