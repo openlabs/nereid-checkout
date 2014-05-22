@@ -1,5 +1,5 @@
 [run]
-source = trytond.modules.nereid_checkout,nereid_checkout
+source = trytond.modules.nereid_checkout
 
 [report]
 omit = */tests/*, */setup.py, */fabfile.py

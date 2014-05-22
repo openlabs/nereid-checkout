@@ -11,7 +11,7 @@ from datetime import datetime
 from functools import wraps
 
 from nereid import render_template, request, url_for, flash, redirect, \
-    login_required, current_app, current_user, route
+    current_app, current_user, route
 from nereid.signals import failed_login
 from nereid.globals import session
 from flask.ext.login import login_user, login_fresh
@@ -613,12 +613,15 @@ class Checkout(ModelView):
         This is separated so that other modules can easily modify the
         behavior of processing payment independent of this module.
         """
+        NereidCart = Pool().get('nereid.cart')
+
+        cart = NereidCart.open_cart()
         payment_form = cls.get_payment_form()
         credit_card_form = cls.get_credit_card_form()
 
         if not request.is_guest_user and payment_form.payment_profile.data:
             # Regd. user with payment_profile
-            rv = cls.complete_using_profile(
+            rv = cart.sale._complete_using_profile(
                 payment_form.payment_profile.data
             )
             if isinstance(rv, BaseResponse):
@@ -629,7 +632,7 @@ class Checkout(ModelView):
 
         elif payment_form.alternate_payment_method.data:
             # Checkout using alternate payment method
-            rv = cls.complete_using_alternate_payment_method(
+            rv = cart.sale._complete_using_alternate_payment_method(
                 payment_form
             )
             if isinstance(rv, BaseResponse):
@@ -642,7 +645,7 @@ class Checkout(ModelView):
         elif request.nereid_website.credit_card_gateway and \
                 credit_card_form.validate():
             # validate the credit card form and checkout using that
-            cls.complete_using_credit_card(credit_card_form)
+            cart.sale._complete_using_credit_card(credit_card_form)
             return cls.confirm_cart(cart)
 
     @classmethod
@@ -693,142 +696,6 @@ class Checkout(ModelView):
             credit_card_form=credit_card_form,
             PaymentMethod=PaymentMethod,
         )
-
-    @classmethod
-    def complete_using_credit_card(cls, credit_card_form):
-        '''
-        Complete using the given card.
-
-        If the user is registered and the save card option is given, then
-        first save the card and delegate to :meth:`complete_using_profile`
-        with the profile thus obtained.
-
-        Otherwise a payment transaction is created with the given card data.
-        '''
-        NereidCart = Pool().get('nereid.cart')
-        AddPaymentProfileWizard = Pool().get(
-            'party.party.payment_profile.add', type='wizard'
-        )
-        TransactionUseCardWizard = Pool().get(
-            'payment_gateway.transaction.use_card', type='wizard'
-        )
-        PaymentTransaction = Pool().get('payment_gateway.transaction')
-
-        sale = NereidCart.open_cart().sale
-        gateway = request.nereid_website.credit_card_gateway
-
-        if not request.is_guest_user and \
-                credit_card_form.add_card_to_profiles.data and \
-                request.nereid_website.save_payment_profile:
-            profile_wiz = AddPaymentProfileWizard(
-                AddPaymentProfileWizard.create()[0]     # Wizard session
-            )
-
-            profile_wiz.card_info.party = sale.party
-            profile_wiz.card_info.address = sale.invoice_address
-            profile_wiz.card_info.provider = gateway.provider
-            profile_wiz.card_info.gateway = gateway
-            profile_wiz.card_info.owner = credit_card_form.owner.data
-            profile_wiz.card_info.number = credit_card_form.number.data
-            profile_wiz.card_info.expiry_month = \
-                credit_card_form.expiry_month.data
-            profile_wiz.card_info.expiry_year = \
-                unicode(credit_card_form.expiry_year.data)
-            profile_wiz.card_info.csc = credit_card_form.cvv.data
-
-            with Transaction().set_context(return_profile=True):
-                profile = profile_wiz.transition_add()
-                return cls.complete_using_profile(profile.id)
-
-        # Manual card based operation
-        payment_transaction = PaymentTransaction(
-            party=sale.party,
-            address=sale.invoice_address,
-            amount=sale.amount_to_receive,
-            currency=sale.currency,
-            gateway=gateway,
-            sale=sale,
-        )
-        payment_transaction.save()
-
-        use_card_wiz = TransactionUseCardWizard(
-            TransactionUseCardWizard.create()[0]        # Wizard session
-        )
-        use_card_wiz.card_info.owner = credit_card_form.owner.data
-        use_card_wiz.card_info.number = credit_card_form.number.data
-        use_card_wiz.card_info.expiry_month = \
-            credit_card_form.expiry_month.data
-        use_card_wiz.card_info.expiry_year = \
-            unicode(credit_card_form.expiry_year.data)
-        use_card_wiz.card_info.csc = credit_card_form.cvv.data
-
-        with Transaction().set_context(active_id=payment_transaction.id):
-            use_card_wiz.transition_capture()
-
-    @classmethod
-    def complete_using_alternate_payment_method(cls, payment_form):
-        '''
-        :param payment_form: The validated payment_form to extract additional
-                             info
-        '''
-        NereidCart = Pool().get('nereid.cart')
-        PaymentTransaction = Pool().get('payment_gateway.transaction')
-        PaymentMethod = Pool().get('nereid.website.payment_method')
-
-        sale = NereidCart.open_cart().sale
-        payment_method = PaymentMethod(
-            payment_form.alternate_payment_method.data
-        )
-
-        payment_transaction = PaymentTransaction(
-            party=sale.party,
-            address=sale.invoice_address,
-            amount=sale.amount_to_receive,
-            currency=sale.currency,
-            gateway=payment_method.gateway,
-            sale=sale,
-        )
-        payment_transaction.save()
-
-        return payment_method.process(payment_transaction)
-
-    @classmethod
-    @login_required
-    def complete_using_profile(cls, payment_profile_id):
-        '''
-        Complete the Checkout using a payment_profile. Only available to the
-        registered users of the website.
-
-
-        * payment_profile: Process the payment profile for the transaction
-        '''
-        NereidCart = Pool().get('nereid.cart')
-        PaymentProfile = Pool().get('party.payment_profile')
-        PaymentTransaction = Pool().get('payment_gateway.transaction')
-
-        payment_profile = PaymentProfile(payment_profile_id)
-
-        if payment_profile.party != current_user.party:
-            # verify that the payment profile belongs to the registered
-            # user.
-            flash(_('The payment profile chosen is invalid'))
-            return redirect(
-                url_for('nereid.checkout.payment_method')
-            )
-
-        sale = NereidCart.open_cart().sale
-        payment_transaction = PaymentTransaction(
-            party=sale.party,
-            address=sale.invoice_address,
-            payment_profile=payment_profile,
-            amount=sale.amount_to_receive,
-            currency=sale.currency,
-            gateway=payment_profile.gateway,
-            sale=sale,
-        )
-        payment_transaction.save()
-
-        PaymentTransaction.capture([payment_transaction])
 
     @classmethod
     def confirm_cart(cls, cart):
