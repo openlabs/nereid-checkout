@@ -113,15 +113,14 @@ class Sale:
         """
         try:
             email_message = render_email(
-                CONFIG['smtp_from'], self.invoice_address.email,
-                'Order Completed',
+                CONFIG['smtp_from'], self.party.email, 'Order Completed',
                 text_template='emails/sale-confirmation-text.jinja',
                 html_template='emails/sale-confirmation-html.jinja',
                 sale=self
             )
             server = get_smtp_server()
             server.sendmail(
-                CONFIG['smtp_from'], [self.invoice_address.email],
+                CONFIG['smtp_from'], [self.party.email],
                 email_message.as_string()
             )
             server.quit()
