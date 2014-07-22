@@ -500,6 +500,7 @@ class Checkout(ModelView):
         '''
         NereidCart = Pool().get('nereid.cart')
         Address = Pool().get('party.address')
+        PaymentProfile = Pool().get('party.payment_profile')
 
         cart = NereidCart.open_cart()
         address_form = cls.get_new_address_form(cart.sale.invoice_address)
@@ -517,6 +518,17 @@ class Checkout(ModelView):
                 return redirect(
                     url_for('nereid.checkout.payment_method')
                 )
+            if request.form.get('payment_profile'):
+                payment_profile = PaymentProfile(
+                    request.form.get('payment_profile', type=int)
+                )
+                if payment_profile and \
+                        cart.sale.invoice_address != payment_profile.address:
+                    cart.sale.invoice_address = payment_profile.address
+                    cart.sale.save()
+                    return redirect(
+                        url_for('nereid.checkout.payment_method')
+                    )
 
             if not current_user.is_anonymous() and request.form.get('address'):
                 # Registered user has chosen an existing address
