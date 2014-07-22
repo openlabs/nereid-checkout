@@ -54,6 +54,25 @@ class BaseTestCheckout(BaseTestCase):
         self.smtplib_patcher = patch('smtplib.SMTP')
         self.PatchedSMTP = self.smtplib_patcher.start()
 
+    def setup_defaults(self):
+        """
+        Setup the defaults
+        """
+        super(BaseTestCheckout, self).setup_defaults()
+
+        Address = POOL.get('party.address')
+
+        # Create default addresses
+        Address.create([
+            {
+                'party': self.registered_user.party.id,
+                'name': self.registered_user.party.name,
+            }, {
+                'party': self.registered_user2.party.id,
+                'name': self.registered_user2.party.name,
+            },
+        ])
+
     def _create_pricelists(self):
         """
         Create the pricelists
