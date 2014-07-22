@@ -8,7 +8,6 @@
     :license: GPLv3, see LICENSE for more details
 """
 from trytond.model import ModelSQL, ModelView, fields
-from trytond.pyson import Bool, Eval
 from trytond.pool import PoolMeta, Pool
 
 __all__ = ['Website', 'NereidPaymentMethod']
@@ -18,21 +17,6 @@ __metaclass__ = PoolMeta
 class Website:
     "Define the credit card handler"
     __name__ = 'nereid.website'
-
-    accept_credit_card = fields.Boolean('Accept Credit Card')
-    save_payment_profile = fields.Boolean(
-        'Allow Saving Payment Profiles', states={
-            'invisible': ~Bool(Eval('accept_credit_card'))
-        }, depends=['accept_credit_card']
-    )
-    credit_card_gateway = fields.Many2One(
-        'payment_gateway.gateway', 'Credit Card Gateway',
-        states={
-            'required': Bool(Eval('accept_credit_card')),
-            'invisible': ~Bool(Eval('accept_credit_card'))
-        }, depends=['accept_credit_card'],
-        domain=[('method', '=', 'credit_card')]
-    )
 
     alternate_payment_methods = fields.One2Many(
         'nereid.website.payment_method', 'website',

@@ -29,13 +29,12 @@ major_version = int(major_version)
 minor_version = int(minor_version)
 
 requires = [
-    'trytond_nereid>=3.0.7.0',
 ]
 
 MODULE = 'nereid_checkout'
 PREFIX = 'trytond'
 MODULE2PREFIX = {
-    'payment_gateway': 'openlabs',
+    'nereid_payment_gateway': 'openlabs',
     'sale_payment_gateway': 'openlabs',
 }
 
