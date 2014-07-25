@@ -73,7 +73,7 @@ class Sale:
         # Try to find if the user can be shown the order
         access_code = request.values.get('access_code', None)
 
-        if request.is_guest_user:
+        if current_user.is_anonymous():
             if not access_code:
                 # No access code provided
                 abort(403)
@@ -158,7 +158,7 @@ class Sale:
 
         gateway = request.nereid_website.credit_card_gateway
 
-        if not request.is_guest_user and \
+        if not current_user.is_anonymous() and \
                 credit_card_form.add_card_to_profiles.data and \
                 request.nereid_website.save_payment_profile:
             profile_wiz = AddPaymentProfileWizard(

@@ -261,7 +261,7 @@ class Checkout(ModelView):
         NereidUser = Pool().get('nereid.user')
         Party = Pool().get('party.party')
 
-        if not request.is_guest_user:
+        if not current_user.is_anonymous():
             form = CheckoutSignInForm(
                 email=current_user.email,
                 checkout_mode='account',
@@ -411,7 +411,7 @@ class Checkout(ModelView):
         address_form = cls.get_new_address_form(cart.sale.shipment_address)
 
         if request.method == 'POST':
-            if not request.is_guest_user and request.form.get('address'):
+            if not current_user.is_anonymous() and request.form.get('address'):
                 # Registered user has chosen an existing address
                 address = Address(request.form.get('address', type=int))
 
@@ -428,7 +428,8 @@ class Checkout(ModelView):
                 if not address_form.validate():
                     address = None
                 else:
-                    if request.is_guest_user and cart.sale.shipment_address:
+                    if current_user.is_anonymous() and \
+                            cart.sale.shipment_address:
                         # Save to the same address if the guest user
                         # is just trying to update the address
                         address = cart.sale.shipment_address
@@ -455,7 +456,7 @@ class Checkout(ModelView):
                 )
 
         addresses = []
-        if not request.is_guest_user:
+        if not current_user.is_anonymous():
             addresses.extend(current_user.party.addresses)
 
         return render_template(
@@ -517,7 +518,7 @@ class Checkout(ModelView):
                     url_for('nereid.checkout.payment_method')
                 )
 
-            if not request.is_guest_user and request.form.get('address'):
+            if not current_user.is_anonymous() and request.form.get('address'):
                 # Registered user has chosen an existing address
                 address = Address(request.form.get('address', type=int))
 
@@ -534,7 +535,7 @@ class Checkout(ModelView):
                 if not address_form.validate():
                     address = None
                 else:
-                    if request.is_guest_user and cart.sale.invoice_address \
+                    if current_user.is_anonymous() and cart.sale.invoice_address \
                         and cart.sale.invoice_address != cart.sale.shipment_address:    # noqa
                         # Save to the same address if the guest user
                         # is just trying to update the address
@@ -562,7 +563,7 @@ class Checkout(ModelView):
                 )
 
         addresses = []
-        if not request.is_guest_user:
+        if not current_user.is_anonymous():
             addresses.extend(current_user.party.addresses)
 
         return render_template(
@@ -595,7 +596,7 @@ class Checkout(ModelView):
         ]
 
         # add profiles of the registered user
-        if not request.is_guest_user:
+        if not current_user.is_anonymous():
             payment_form.payment_profile.choices = [
                 (p.id, p.rec_name) for p in
                 current_user.party.get_payment_profiles()
@@ -619,7 +620,8 @@ class Checkout(ModelView):
         payment_form = cls.get_payment_form()
         credit_card_form = cls.get_credit_card_form()
 
-        if not request.is_guest_user and payment_form.payment_profile.data:
+        if not current_user.is_anonymous() and \
+                payment_form.payment_profile.data:
             # Regd. user with payment_profile
             rv = cart.sale._complete_using_profile(
                 payment_form.payment_profile.data
