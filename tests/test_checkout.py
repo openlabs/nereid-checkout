@@ -16,6 +16,7 @@ import trytond.tests.test_tryton
 from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
 from trytond.config import CONFIG
 from trytond.transaction import Transaction
+from nereid import current_user
 
 from trytond.modules.nereid_cart_b2c.tests.test_product import BaseTestCase
 
@@ -1956,6 +1957,89 @@ class TestCheckoutPayment(BaseTestCheckout):
 
                 # Ensure that the card is saved (the original one)
                 self.assertEqual(len(sale.party.payment_profiles), 1)
+
+    def test_0230_validate_payment_profile(self):
+        """
+        Selecting billing address as saved address in payment profile
+        """
+
+        Address = POOL.get('party.address')
+        Profile = POOL.get('party.payment_profile')
+        Gateway = POOL.get('payment_gateway.gateway')
+        Journal = POOL.get('account.journal')
+
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            self.party2, = self.Party.create([{
+                'name': 'Registered User',
+            }])
+            with app.test_client() as c:
+                self.login(c, 'email@example.com', 'password')
+
+                address, = Address.create([{
+                    'party': current_user.party.id,
+                    'name': 'Name',
+                    'street': 'Street',
+                    'streetbis': 'StreetBis',
+                    'zip': 'zip',
+                    'city': 'City',
+                    'country': self.available_countries[0].id,
+                    'subdivision':
+                        self.available_countries[0].subdivisions[0].id,
+                }])
+                self._create_auth_net_gateway_for_site()
+                self.assertEqual(
+                    len(current_user.party.payment_profiles), 0
+                )
+
+                gateway, = Gateway.search(['name', '=', 'Authorize.net'])
+
+                cash_journal, = Journal.search([
+                    ('name', '=', 'Cash')
+                ])
+                profile, = Profile.create([{
+                    'last_4_digits': '1111',
+                    'sequence': '10',
+                    'expiry_month': '01',
+                    'expiry_year': '2018',
+                    'address': address.id,
+                    'party': current_user.party.id,
+                    'provider_reference': '27478839|25062702',
+                    'gateway': gateway.id,
+                }])
+                self.assertEqual(
+                    len(current_user.party.payment_profiles), 1
+                )
+
+                self._create_regd_user_order(c)
+                # Try to pay using credit card
+                rv = c.post(
+                    '/checkout/payment',
+                    data={
+                        'payment_profile': '23'
+                    }
+                )
+
+                self.assertTrue(
+                    "Not a valid choice" in rv.data
+                )
+
+                self._create_regd_user_order(c)
+                # Try to pay using credit card
+                rv = c.post(
+                    '/checkout/payment',
+                    data={
+                        'payment_profile':
+                        current_user.party.payment_profiles[0].id
+                    }
+                )
+
+                self.assertEqual(rv.status_code, 302)
+                self.assertTrue('/order/' in rv.location)
+                sale, = self.Sale.search([('state', '=', 'confirmed')])
+                self.assertEqual(sale.invoice_address.id, address.id)
 
 
 def suite():
