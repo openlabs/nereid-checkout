@@ -635,8 +635,9 @@ class Checkout(ModelView):
         if not current_user.is_anonymous() and \
                 payment_form.payment_profile.data:
             # Regd. user with payment_profile
-            rv = cart.sale._complete_using_profile(
-                payment_form.payment_profile.data
+            rv = cart.sale.nereid_pay_using_profile(
+                payment_form.payment_profile.data,
+                cart.sale.amount_to_receive
             )
             if isinstance(rv, BaseResponse):
                 # Redirects only if payment profile is invalid.
@@ -646,8 +647,9 @@ class Checkout(ModelView):
 
         elif payment_form.alternate_payment_method.data:
             # Checkout using alternate payment method
-            rv = cart.sale._complete_using_alternate_payment_method(
-                payment_form
+            rv = cart.sale.nereid_pay_using_alternate_payment_method(
+                payment_form,
+                cart.sale.amount_to_receive
             )
             if isinstance(rv, BaseResponse):
                 # If the alternate payment method introduced a
@@ -659,7 +661,10 @@ class Checkout(ModelView):
         elif request.nereid_website.credit_card_gateway and \
                 credit_card_form.validate():
             # validate the credit card form and checkout using that
-            cart.sale._complete_using_credit_card(credit_card_form)
+            cart.sale.nereid_pay_using_credit_card(
+                credit_card_form,
+                cart.sale.amount_to_receive
+            )
             return cls.confirm_cart(cart)
 
     @classmethod
