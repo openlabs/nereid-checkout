@@ -683,6 +683,7 @@ class Checkout(ModelView):
         '''
         NereidCart = Pool().get('nereid.cart')
         PaymentMethod = Pool().get('nereid.website.payment_method')
+        Date = Pool().get('ir.date')
 
         cart = NereidCart.open_cart()
         if not cart.sale.shipment_address:
@@ -692,6 +693,10 @@ class Checkout(ModelView):
         credit_card_form = cls.get_credit_card_form()
 
         if request.method == 'POST' and payment_form.validate():
+
+            # Setting sale date as current date
+            cart.sale.sale_date = Date.today()
+            cart.sale.save()
 
             # call the billing address method which will handle any
             # address submission that may be there in this request
