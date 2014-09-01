@@ -67,6 +67,7 @@ PREFIX = 'trytond'
 MODULE2PREFIX = {
     'nereid_payment_gateway': 'openlabs',
     'sale_payment_gateway': 'openlabs',
+    'email_queue': 'openlabs',
 }
 
 for dep in info.get('depends', []):

@@ -10,12 +10,11 @@
 from uuid import uuid4
 
 from trytond.model import fields
-from trytond.tools import get_smtp_server
 from trytond.config import CONFIG
 from trytond.pool import PoolMeta, Pool
 
 from nereid import render_template, request, abort, login_required, \
-    current_app, route, current_user, flash, redirect, url_for
+    route, current_user, flash, redirect, url_for
 from nereid.contrib.pagination import Pagination
 from nereid.templating import render_email
 from nereid.ctx import has_request_context
@@ -111,23 +110,17 @@ class Sale:
            * HTML: `emails/sale-confirmation-html.jinja`
 
         """
-        try:
-            email_message = render_email(
-                CONFIG['smtp_from'], self.party.email, 'Order Completed',
-                text_template='emails/sale-confirmation-text.jinja',
-                html_template='emails/sale-confirmation-html.jinja',
-                sale=self
-            )
-            server = get_smtp_server()
-            server.sendmail(
-                CONFIG['smtp_from'], [self.party.email],
-                email_message.as_string()
-            )
-            server.quit()
-        except Exception, exc:
-            if not silent:
-                raise
-            current_app.logger.error(exc)
+        EmailQueue = Pool().get('email.queue')
+        email_message = render_email(
+            CONFIG['smtp_from'], self.party.email, 'Order Completed',
+            text_template='emails/sale-confirmation-text.jinja',
+            html_template='emails/sale-confirmation-html.jinja',
+            sale=self
+        )
+        EmailQueue.queue_mail(
+            CONFIG['smtp_from'], self.party.email,
+            email_message.as_string()
+        )
 
     @classmethod
     def confirm(cls, sales):

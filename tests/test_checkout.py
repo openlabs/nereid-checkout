@@ -63,6 +63,18 @@ class BaseTestCheckout(BaseTestCase):
 
         Address = POOL.get('party.address')
 
+        # Add emails to party
+        self.Party.write([
+            self.registered_user.party, self.registered_user2.party
+        ], {
+            'contact_mechanisms': [('create', [
+                {'type': 'email', 'value': 'test@ol.in'},
+            ])],
+        }, {
+            'contact_mechanisms': [('create', [
+                {'type': 'email', 'value': 'test2@ol.in'},
+            ])],
+        })
         # Create default addresses
         Address.create([
             {
@@ -1604,7 +1616,7 @@ class TestCheckoutPayment(BaseTestCheckout):
             provider='authorize_net',
             method='credit_card',
             authorize_net_login='327deWY74422',
-            authorize_net_transaction_key='9f777HHT6LeMh5f3',
+            authorize_net_transaction_key='32jF65cTxja88ZA2',
         )
         gatway.save()
 
@@ -1693,10 +1705,7 @@ class TestCheckoutPayment(BaseTestCheckout):
                 sale, = Sale.search([('state', '=', 'confirmed')])
                 payment_transaction, = sale.gateway_transactions
                 self.assertEqual(payment_transaction.amount, sale.total_amount)
-                self.assertEqual(
-                    sale.amount_payment_in_progress, sale.total_amount
-                )
-                self.assertEqual(payment_transaction.state, 'in-progress')
+                self.assertEqual(payment_transaction.state, 'completed')
 
     def test_0120_guest_profile_fail(self):
         "Guest - Fucks with profile"
@@ -1862,10 +1871,7 @@ class TestCheckoutPayment(BaseTestCheckout):
                 sale, = Sale.search([('state', '=', 'confirmed')])
                 payment_transaction, = sale.gateway_transactions
                 self.assertEqual(payment_transaction.amount, sale.total_amount)
-                self.assertEqual(
-                    sale.amount_payment_in_progress, sale.total_amount
-                )
-                self.assertEqual(payment_transaction.state, 'in-progress')
+                self.assertEqual(payment_transaction.state, 'completed')
 
     def test_0220_regd_profile_fail(self):
         "Regd User - Fucks with profile"
