@@ -1,0 +1,5 @@
+# Install packages from requirements.txt
+-r requirements.txt
+
+coveralls
+flake8
