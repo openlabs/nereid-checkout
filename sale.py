@@ -190,6 +190,11 @@ class Sale:
 
         if has_request_context():
             for sale in sales:
+
+                # Change party name to invoice address name for guest user
+                if current_user.is_anonymous():
+                    sale.party.name = sale.invoice_address.name
+                    sale.party.save()
                 if sale.email_sent:
                     continue
                 sale.send_confirmation_email()
