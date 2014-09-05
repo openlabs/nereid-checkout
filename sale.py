@@ -111,16 +111,18 @@ class Sale:
 
         """
         EmailQueue = Pool().get('email.queue')
-        email_message = render_email(
-            CONFIG['smtp_from'], self.party.email, 'Order Completed',
-            text_template='emails/sale-confirmation-text.jinja',
-            html_template='emails/sale-confirmation-html.jinja',
-            sale=self
-        )
-        EmailQueue.queue_mail(
-            CONFIG['smtp_from'], self.party.email,
-            email_message.as_string()
-        )
+
+        if self.party.email or current_user.email:
+            email_message = render_email(
+                CONFIG['smtp_from'], self.party.email, 'Order Completed',
+                text_template='emails/sale-confirmation-text.jinja',
+                html_template='emails/sale-confirmation-html.jinja',
+                sale=self
+            )
+            EmailQueue.queue_mail(
+                CONFIG['smtp_from'], self.party.email or current_user.email,
+                email_message.as_string()
+            )
 
     @classmethod
     def confirm(cls, sales):
