@@ -111,7 +111,31 @@ class Sale:
 
         """
         EmailQueue = Pool().get('email.queue')
+        ModelData = Pool().get('ir.model.data')
+        Group = Pool().get('res.group')
 
+        group_id = ModelData.get_id(
+            "nereid_checkout", "order_confirmation_receivers"
+        )
+        to_emails = map(
+            lambda user: user.email,
+            filter(lambda user: user.email, Group(group_id).users)
+        )
+
+        if to_emails:
+            # Send the order confirmation notification email
+            subject = "New order has been placed: #%s" % self.reference
+            email_message = render_email(
+                CONFIG['smtp_from'], to_emails, subject,
+                text_template='emails/sale-confirmation-text.jinja',
+                html_template='emails/sale-confirmation-html.jinja',
+                sale=self
+            )
+            EmailQueue.queue_mail(
+                CONFIG['smtp_from'], to_emails, email_message.as_string()
+            )
+
+        # Send the standard order confirmation email
         if self.party.email or current_user.email:
             email_message = render_email(
                 CONFIG['smtp_from'], self.party.email, 'Order Completed',
@@ -119,6 +143,7 @@ class Sale:
                 html_template='emails/sale-confirmation-html.jinja',
                 sale=self
             )
+
             EmailQueue.queue_mail(
                 CONFIG['smtp_from'], self.party.email or current_user.email,
                 email_message.as_string()

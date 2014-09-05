@@ -64,5 +64,9 @@
             <field name="name">website_checkout</field>
         </record>
 
+        <record id="order_confirmation_receivers" model="res.group">
+            <field name="name">Order Confirmation BCC receivers</field>
+        </record>
+
     </data>
 </tryton>
