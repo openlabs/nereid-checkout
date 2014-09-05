@@ -22,10 +22,11 @@ from werkzeug.wrappers import BaseResponse
 from trytond.model import ModelView, fields
 from trytond.pool import Pool, PoolMeta
 from trytond.transaction import Transaction
+from trytond.pyson import Eval
 
 from .i18n import _
 
-__all__ = ['Cart', 'Party', 'Checkout', 'Party']
+__all__ = ['Cart', 'Party', 'Checkout', 'Party', 'Address']
 __metaclass__ = PoolMeta
 
 
@@ -394,6 +395,7 @@ class Checkout(ModelView):
         '''
         NereidCart = Pool().get('nereid.cart')
         Address = Pool().get('party.address')
+        ContactMechanism = Pool().get('party.contact_mechanism')
 
         cart = NereidCart.open_cart()
         address_form = cls.get_new_address_form(cart.sale.shipment_address)
@@ -432,6 +434,16 @@ class Checkout(ModelView):
                     address.city = address_form.city.data
                     address.country = address_form.country.data
                     address.subdivision = address_form.subdivision.data
+
+                    if address_form.phone.data:
+                        # create contact mechanism
+                        phone_number, = ContactMechanism.create([{
+                            'party': cart.sale.party.id,
+                            'type': 'phone',
+                            'value': address_form.phone.data,
+                        }])
+                        address.phone_number = phone_number.id
+
                     address.save()
 
             if address is not None:
@@ -487,6 +499,7 @@ class Checkout(ModelView):
         NereidCart = Pool().get('nereid.cart')
         Address = Pool().get('party.address')
         PaymentProfile = Pool().get('party.payment_profile')
+        ContactMechanism = Pool().get('party.contact_mechanism')
 
         cart = NereidCart.open_cart()
         address_form = cls.get_new_address_form(cart.sale.invoice_address)
@@ -549,6 +562,16 @@ class Checkout(ModelView):
                     address.city = address_form.city.data
                     address.country = address_form.country.data
                     address.subdivision = address_form.subdivision.data
+
+                    if address_form.phone.data:
+                        # create contact mechanism
+                        phone_number, = ContactMechanism.create([{
+                            'party': cart.sale.party.id,
+                            'type': 'phone',
+                            'value': address_form.phone.data,
+                        }])
+                        address.phone_number = phone_number.id
+
                     address.save()
 
             if address is not None:
@@ -735,3 +758,18 @@ class Checkout(ModelView):
             'sale.sale.render', active_id=sale.id, confirmation=True,
             access_code=access_code,
         ))
+
+
+class Address:
+    """
+    Extension of party.address
+    """
+    __name__ = 'party.address'
+
+    phone_number = fields.Many2One(
+        'party.contact_mechanism', 'Phone',
+        domain=[
+            ('type', '=', 'phone'),
+            ('party', '=', Eval('party'))
+        ], depends=['party'], select=True
+    )
