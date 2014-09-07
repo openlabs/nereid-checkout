@@ -231,6 +231,21 @@ class Checkout(ModelView):
     sign_in_form = CheckoutSignInForm
 
     @classmethod
+    def allowed_as_guest(cls, email):
+        """
+        Check if provided email can checkout as guest or force user to signin.
+        As current behaviour existing user should signin
+        """
+        NereidUser = Pool().get('nereid.user')
+
+        existing = NereidUser.search([
+            ('email', '=', email),
+            ('company', '=', request.nereid_website.company.id),
+        ])
+
+        return not existing
+
+    @classmethod
     @route('/checkout/sign-in', methods=['GET', 'POST'])
     @not_empty_cart
     def sign_in(cls):
@@ -278,11 +293,8 @@ class Checkout(ModelView):
 
         if form.validate_on_submit():
             if form.checkout_mode.data == 'guest':
-                existing = NereidUser.search([
-                    ('email', '=', form.email.data),
-                    ('company', '=', request.nereid_website.company.id),
-                ])
-                if existing:
+
+                if not cls.allowed_as_guest(form.email.data):
                     return render_template(
                         'checkout/signin-email-in-use.jinja',
                         email=form.email.data
