@@ -309,41 +309,6 @@ class TestCheckoutSignIn(BaseTestCheckout):
                     rv.location.endswith('/checkout/shipping-address')
                 )
 
-    def test_0060_nonfresh_signins_require_auth(self):
-        "Not fresh will have a forced auth"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
-            self.setup_defaults()
-            app = self.get_app(REMEMBER_COOKIE_NAME='remember')
-
-            with app.test_client() as c:
-                c.post(
-                    '/cart/add', data={
-                        'product': self.product1.id, 'quantity': 5
-                    }
-                )
-                rv = c.post(
-                    '/checkout/sign-in', data={
-                        'email': 'email@example.com',
-                        'password': 'password',
-                        'checkout_mode': 'account',
-                    }
-                )
-                rv = c.get('/checkout/sign-in')
-                self.assertEqual(rv.status_code, 302)
-                self.assertTrue(
-                    rv.location.endswith('/checkout/shipping-address')
-                )
-
-                # Simulate a browser close by clearing the _fresh tag in
-                # the session
-                with c.session_transaction() as sess:
-                    sess.pop('_fresh')
-
-                # Sign in page now sees a login which isn't fresh
-                # So render the page itself.
-                rv = c.get('/checkout/sign-in')
-                self.assertEqual(rv.status_code, 200)
-
 
 class TestCheckoutShippingAddress(BaseTestCheckout):
     "Test the Shipping Address Step"
