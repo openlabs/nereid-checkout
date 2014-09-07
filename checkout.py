@@ -227,6 +227,9 @@ class Checkout(ModelView):
     'A checkout model'
     __name__ = 'nereid.checkout'
 
+    # Downstream modules can change the form
+    sign_in_form = CheckoutSignInForm
+
     @classmethod
     @route('/checkout/sign-in', methods=['GET', 'POST'])
     @not_empty_cart
@@ -262,13 +265,13 @@ class Checkout(ModelView):
         Party = Pool().get('party.party')
 
         if not current_user.is_anonymous():
-            form = CheckoutSignInForm(
+            form = cls.sign_in_form(
                 email=current_user.email,
                 checkout_mode='account',
             )
         else:
             # Guest user
-            form = CheckoutSignInForm(
+            form = cls.sign_in_form(
                 email=session.get('email'),
                 checkout_mode='guest',
             )
