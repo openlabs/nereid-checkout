@@ -14,7 +14,7 @@ from nereid import render_template, request, url_for, flash, redirect, \
     current_app, current_user, route
 from nereid.signals import failed_login
 from nereid.globals import session
-from flask.ext.login import login_user, login_fresh
+from flask.ext.login import login_user
 from flask_wtf import Form
 from wtforms import TextField, RadioField, validators, PasswordField, \
     ValidationError, SelectField, BooleanField
@@ -59,32 +59,6 @@ def not_empty_cart(function):
                 'No sale or lines. Redirect to shopping-cart'
             )
             return redirect(url_for('nereid.cart.view_cart'))
-        return function(*args, **kwargs)
-    return wrapper
-
-
-def recent_signin(function):
-    """
-    Ensure that the session for the registered user is recent.
-
-    The functionality is similar to fresh_login_required provided by
-    Flask-Login expect that the check is done only when a registered user
-    tries to checkout.
-
-    The guest user does not require to have a recent signin check
-
-    :meth:`Checkout.is_recent_signin` method.
-    """
-    @wraps(function)
-    def wrapper(*args, **kwargs):
-        if not current_user.is_anonymous():
-            # Check only for logged in users. Guest checkouts are always
-            # fresh ;-)
-            if not login_fresh():
-                current_app.logger.debug(
-                    'No recent sign-in. Redirect to sign-in'
-                )
-                return redirect(url_for('nereid.checkout.sign_in'))
         return function(*args, **kwargs)
     return wrapper
 
@@ -354,7 +328,7 @@ class Checkout(ModelView):
                 else:
                     failed_login.send()
 
-        if not current_user.is_anonymous() and login_fresh():
+        if not current_user.is_anonymous():
             # Registered user with a fresh login can directly proceed to
             # step 2, which is filling the shipping address
             #
@@ -387,7 +361,6 @@ class Checkout(ModelView):
 
     @classmethod
     @route('/checkout/shipping-address', methods=['GET', 'POST'])
-    @recent_signin
     @not_empty_cart
     @sale_has_non_guest_party
     def shipping_address(cls):
@@ -483,7 +456,6 @@ class Checkout(ModelView):
     @classmethod
     @route('/checkout/delivery-method', methods=['GET', 'POST'])
     @not_empty_cart
-    @recent_signin
     @sale_has_non_guest_party
     def delivery_method(cls):
         '''
@@ -507,7 +479,6 @@ class Checkout(ModelView):
     @classmethod
     @route('/checkout/billing-address', methods=['GET', 'POST'])
     @not_empty_cart
-    @recent_signin
     @sale_has_non_guest_party
     def billing_address(cls):
         '''
@@ -685,7 +656,6 @@ class Checkout(ModelView):
     @classmethod
     @route('/checkout/payment', methods=['GET', 'POST'])
     @not_empty_cart
-    @recent_signin
     @sale_has_non_guest_party
     @with_company_context
     def payment_method(cls):
