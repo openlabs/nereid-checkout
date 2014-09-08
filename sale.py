@@ -19,6 +19,7 @@ from nereid.contrib.pagination import Pagination
 from nereid.templating import render_email
 from nereid.ctx import has_request_context
 from trytond.transaction import Transaction
+from trytond.report import Report
 
 from .i18n import _
 
@@ -129,7 +130,9 @@ class Sale:
                 CONFIG['smtp_from'], to_emails, subject,
                 text_template='emails/sale-confirmation-text.jinja',
                 html_template='emails/sale-confirmation-html.jinja',
-                sale=self
+                sale=self,
+                formatLang=lambda *args, **kargs: Report.format_lang(
+                    *args, **kargs)
             )
             EmailQueue.queue_mail(
                 CONFIG['smtp_from'], to_emails, email_message.as_string()
@@ -141,7 +144,9 @@ class Sale:
                 CONFIG['smtp_from'], self.party.email, 'Order Completed',
                 text_template='emails/sale-confirmation-text.jinja',
                 html_template='emails/sale-confirmation-html.jinja',
-                sale=self
+                sale=self,
+                formatLang=lambda *args, **kargs: Report.format_lang(
+                    *args, **kargs)
             )
 
             EmailQueue.queue_mail(
