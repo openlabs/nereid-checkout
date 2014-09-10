@@ -63,6 +63,11 @@
             <field name="inherit" ref="nereid.website_view_form"/>
             <field name="name">website_checkout</field>
         </record>
+         <record model="ir.ui.view" id="address_view_form">
+            <field name="model">party.address</field>
+            <field name="inherit" ref="party.address_view_form" />
+            <field name="name">address_form</field>
+        </record>
 
         <record id="order_confirmation_receivers" model="res.group">
             <field name="name">Order Confirmation BCC receivers</field>

@@ -526,6 +526,7 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
                         'street': 'Biscayne Boulevard',
                         'streetbis': 'Apt. 1906, Biscayne Park',
                         'zip': 'FL33137',
+                        'phone': '1234567891',
                         'city': 'Miami',
                         'country': country.id,
                         'subdivision': subdivision.id,
@@ -543,7 +544,9 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
                 addresses = Address.search([
                     ('party', '=', user.party.id),
                     ('street', '=', 'Biscayne Boulevard'),
+                    ('phone_number.value', '=', '1234567891'),
                 ])
+
                 self.assertEqual(len(addresses), 1)
 
                 sales = Sale.search([
@@ -944,6 +947,7 @@ class TestCheckoutBillingAddress(BaseTestCheckout):
                         'streetbis': 'Apt. 1906, Biscayne Park',
                         'zip': 'FL33137',
                         'city': 'Miami',
+                        'phone': '1234567891',
                         'country': country.id,
                         'subdivision': subdivision.id,
                     }
@@ -960,6 +964,7 @@ class TestCheckoutBillingAddress(BaseTestCheckout):
                 addresses = Address.search([
                     ('party', '=', user.party.id),
                     ('street', '=', 'Biscayne Boulevard'),
+                    ('phone_number.value', '=', '1234567891'),
                 ])
                 self.assertEqual(len(addresses), 1)
 
