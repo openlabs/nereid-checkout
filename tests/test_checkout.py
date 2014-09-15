@@ -498,6 +498,7 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
 
             Sale = POOL.get('sale.sale')
             Address = POOL.get('party.address')
+            ContactMechanism = POOL.get('party.contact_mechanism')
 
             country = self.Country(self.available_countries[0])
             subdivision = country.subdivisions[0]
@@ -564,6 +565,7 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
                         'streetbis': 'Trippunithura',
                         'zip': '682013',
                         'city': 'Cochin',
+                        'phone': '1234567891',
                         'country': country.id,
                         'subdivision': subdivision.id,
                     }
@@ -580,6 +582,14 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
                     )),
                 ])
                 self.assertEqual(len(addresses), 2)
+
+                # Assert that contact mechanism is not duplicated
+                phone_number = ContactMechanism.search([
+                    ('type', '=', 'phone'),
+                    ('party', '=', current_user.party.id),
+                    ('value', '=', '1234567891'),
+                ])
+                self.assertEqual(len(phone_number), 1)
 
                 # Assert the new address is now the shipment_address
                 address, = Address.search([
@@ -918,6 +928,7 @@ class TestCheckoutBillingAddress(BaseTestCheckout):
 
             Sale = POOL.get('sale.sale')
             Address = POOL.get('party.address')
+            ContactMechanism = POOL.get('party.contact_mechanism')
 
             country = self.Country(self.available_countries[0])
             subdivision = country.subdivisions[0]
@@ -983,6 +994,7 @@ class TestCheckoutBillingAddress(BaseTestCheckout):
                         'streetbis': 'Trippunithura',
                         'zip': '682013',
                         'city': 'Cochin',
+                        'phone': '1234567891',
                         'country': country.id,
                         'subdivision': subdivision.id,
                     }
@@ -999,6 +1011,14 @@ class TestCheckoutBillingAddress(BaseTestCheckout):
                     )),
                 ])
                 self.assertEqual(len(addresses), 2)
+
+                # Assert that contact mechanism is not duplicated
+                phone_number = ContactMechanism.search([
+                    ('type', '=', 'phone'),
+                    ('party', '=', current_user.party.id),
+                    ('value', '=', '1234567891'),
+                ])
+                self.assertEqual(len(phone_number), 1)
 
                 # Assert the new address is now the shipment_address
                 address, = Address.search([
