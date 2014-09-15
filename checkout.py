@@ -397,7 +397,7 @@ class Checkout(ModelView):
         Address = Pool().get('party.address')
 
         cart = NereidCart.open_cart()
-        address_form = cls.get_new_address_form(cart.sale.shipment_address)
+        address_form = cls.get_new_address_form()
 
         if request.method == 'POST':
             if not current_user.is_anonymous() and request.form.get('address'):
@@ -498,7 +498,7 @@ class Checkout(ModelView):
         PaymentProfile = Pool().get('party.payment_profile')
 
         cart = NereidCart.open_cart()
-        address_form = cls.get_new_address_form(cart.sale.invoice_address)
+        address_form = cls.get_new_address_form()
 
         if request.method == 'POST':
             if request.form.get('use_shipment_address'):
