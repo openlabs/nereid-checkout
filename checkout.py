@@ -395,7 +395,6 @@ class Checkout(ModelView):
         '''
         NereidCart = Pool().get('nereid.cart')
         Address = Pool().get('party.address')
-        ContactMechanism = Pool().get('party.contact_mechanism')
 
         cart = NereidCart.open_cart()
         address_form = cls.get_new_address_form(cart.sale.shipment_address)
@@ -437,13 +436,11 @@ class Checkout(ModelView):
 
                     if address_form.phone.data:
                         # create contact mechanism
-                        phone_number, = ContactMechanism.create([{
-                            'party': cart.sale.party.id,
-                            'type': 'phone',
-                            'value': address_form.phone.data,
-                        }])
-                        address.phone_number = phone_number.id
-
+                        phone = \
+                            cart.sale.party.add_contact_mechanism_if_not_exists(
+                                'phone', address_form.phone.data
+                            )
+                        address.phone_number = phone.id
                     address.save()
 
             if address is not None:
@@ -499,7 +496,6 @@ class Checkout(ModelView):
         NereidCart = Pool().get('nereid.cart')
         Address = Pool().get('party.address')
         PaymentProfile = Pool().get('party.payment_profile')
-        ContactMechanism = Pool().get('party.contact_mechanism')
 
         cart = NereidCart.open_cart()
         address_form = cls.get_new_address_form(cart.sale.invoice_address)
@@ -565,12 +561,11 @@ class Checkout(ModelView):
 
                     if address_form.phone.data:
                         # create contact mechanism
-                        phone_number, = ContactMechanism.create([{
-                            'party': cart.sale.party.id,
-                            'type': 'phone',
-                            'value': address_form.phone.data,
-                        }])
-                        address.phone_number = phone_number.id
+                        phone = \
+                            cart.sale.party.add_contact_mechanism_if_not_exists(
+                                'phone', address_form.phone.data
+                            )
+                        address.phone_number = phone.id
 
                     address.save()
 
