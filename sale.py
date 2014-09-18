@@ -45,14 +45,28 @@ class Sale:
     def render_list(cls, page=1):
         """Render all orders
         """
+
+        filter_by = request.args.get('filter_by', None)
+
         domain = [
             ('party', '=', request.nereid_user.party.id),
-            ('state', '!=', 'draft'),
         ]
 
-        # Handle order duration
+        if filter_by == 'processing':
+            domain.append(('state', 'in', ('processing', 'confirmed')))
 
+        elif filter_by == 'done':
+            domain.append(('state', '=', 'done'))
+
+        elif filter_by == 'canceled':
+            domain.append(('state', '=', 'cancel'))
+
+        else:
+            domain.append(('state', 'not in', ('draft', 'quotation')))
+
+        # Handle order duration
         sales = Pagination(cls, domain, page, cls.per_page)
+
         return render_template('sales.jinja', sales=sales)
 
     @route('/order/<int:active_id>')
