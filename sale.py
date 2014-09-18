@@ -14,7 +14,7 @@ from trytond.config import CONFIG
 from trytond.pool import PoolMeta, Pool
 
 from nereid import render_template, request, abort, login_required, \
-    route, current_user, flash, redirect, url_for
+    route, current_user, flash, redirect, url_for, jsonify
 from nereid.contrib.pagination import Pagination
 from nereid.templating import render_email
 from nereid.ctx import has_request_context
@@ -255,3 +255,36 @@ class Sale:
                 url_for('nereid.checkout.payment_method')
             )
         return self._pay_using_profile(payment_profile, amount)
+
+    @route('/order/<int:active_id>/add-comment', methods=['POST'])
+    def add_comment_to_sale(self):
+        """
+        Add comment to sale.
+
+        User can add comment or note to sale order.
+        """
+        comment_is_allowed = False
+        if current_user.is_anonymous():
+            access_code = request.values.get('access_code', None)
+            if access_code and access_code == self.guest_access_code:
+                # No access code provided
+                comment_is_allowed = True
+
+        elif current_user.is_authenticated() and \
+                current_user.party == self.party:
+            comment_is_allowed = True
+
+        if not comment_is_allowed:
+            abort(403)
+
+        if request.form.get('comment') and not self.comment:
+            self.comment = request.form.get('comment')
+            self.save()
+            if request.is_xhr:
+                return jsonify({
+                    'message': 'Comment Added',
+                    'comment': self.comment,
+                })
+
+            flash(_('Comment Added'))
+        return redirect(request.referrer)

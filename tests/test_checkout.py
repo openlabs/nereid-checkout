@@ -11,6 +11,7 @@ import random
 from ast import literal_eval
 from mock import patch
 from decimal import Decimal
+import json
 
 import trytond.tests.test_tryton
 from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
@@ -2036,6 +2037,148 @@ class TestCheckoutPayment(BaseTestCheckout):
                 self.assertTrue('/order/' in rv.location)
                 sale, = self.Sale.search([('state', '=', 'confirmed')])
                 self.assertEqual(sale.invoice_address.id, address.id)
+
+    def test_0240_add_comment_to_sale(self):
+        """
+        Add comment to sale for logged in user.
+        """
+        Address = POOL.get('party.address')
+        Profile = POOL.get('party.payment_profile')
+        Gateway = POOL.get('payment_gateway.gateway')
+        Journal = POOL.get('account.journal')
+
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            self.party2, = self.Party.create([{
+                'name': 'Registered User',
+            }])
+            with app.test_client() as c:
+                self.login(c, 'email@example.com', 'password')
+
+                address, = Address.create([{
+                    'party': current_user.party.id,
+                    'name': 'Name',
+                    'street': 'Street',
+                    'streetbis': 'StreetBis',
+                    'zip': 'zip',
+                    'city': 'City',
+                    'country': self.available_countries[0].id,
+                    'subdivision':
+                        self.available_countries[0].subdivisions[0].id,
+                }])
+                self._create_auth_net_gateway_for_site()
+                self.assertEqual(
+                    len(current_user.party.payment_profiles), 0
+                )
+
+                gateway, = Gateway.search(['name', '=', 'Authorize.net'])
+
+                cash_journal, = Journal.search([
+                    ('name', '=', 'Cash')
+                ])
+                profile, = Profile.create([{
+                    'last_4_digits': '1111',
+                    'sequence': '10',
+                    'expiry_month': '01',
+                    'expiry_year': '2018',
+                    'address': address.id,
+                    'party': current_user.party.id,
+                    'provider_reference': '27478839|25062702',
+                    'gateway': gateway.id,
+                }])
+                self.assertEqual(
+                    len(current_user.party.payment_profiles), 1
+                )
+
+                self._create_regd_user_order(c)
+                # Try to pay using credit card
+                rv = c.post(
+                    '/checkout/payment',
+                    data={
+                        'payment_profile':
+                        current_user.party.payment_profiles[0].id
+                    }
+                )
+
+                self.assertEqual(rv.status_code, 302)
+                self.assertTrue('/order/' in rv.location)
+
+                sale, = self.Sale.search([('state', '=', 'confirmed')])
+                rv = c.post(
+                    '/order/%s/add-comment' % (sale.id,), data={
+                        'comment': 'This is comment on sale!'
+                    }, headers=[('X-Requested-With', 'XMLHttpRequest')]
+                )
+
+                json_data = json.loads(rv.data)['message']
+                self.assertEqual('Comment Added', json_data)
+
+                self.assertEqual('This is comment on sale!', sale.comment)
+
+                rv = c.post(
+                    '/order/%s/add-comment' % (sale.id,), data={
+                        'comment': 'This is comment!'
+                    }
+                )
+                self.assertTrue(rv.status_code, 302)
+
+    def test_0250_add_comment_to_guest_sale(self):
+        """
+        Add comment to sale for guest user
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            Sale = POOL.get('sale.sale')
+
+            with app.test_client() as c:
+                self._create_guest_order(c)
+
+            # Define a new payment gateway
+            self._create_auth_net_gateway_for_site()
+
+            with app.test_client() as c:
+                self._create_guest_order(c)
+
+                # Try to pay using credit card
+                rv = c.post(
+                    '/checkout/payment',
+                    data={
+                        'owner': 'Joe Blow',
+                        'number': '4111111111111111',
+                        'expiry_year': '2018',
+                        'expiry_month': '01',
+                        'cvv': '911',
+                    }
+                )
+                self.assertEqual(rv.status_code, 302)
+                self.assertTrue('/order/' in rv.location)
+                self.assertTrue('access_code' in rv.location)
+
+                sale, = Sale.search([('state', '=', 'confirmed')])
+
+                rv = c.post(
+                    '/order/%s/add-comment' % (sale.id, ), data={
+                        'comment': 'This is comment on sale!'
+                    }, headers=[('X-Requested-With', 'XMLHttpRequest')]
+                )
+                self.assertEqual(rv.status_code, 403)
+
+                rv = c.post(
+                    '/order/%s/add-comment?access_code=%s' % (
+                        sale.id, sale.guest_access_code,
+                    ), data={
+                        'comment': 'This is comment on sale!'
+                    }, headers=[('X-Requested-With', 'XMLHttpRequest')]
+                )
+
+                json_data = json.loads(rv.data)['message']
+                self.assertEqual('Comment Added', json_data)
+
+                self.assertEqual('This is comment on sale!', sale.comment)
 
 
 def suite():
