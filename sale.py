@@ -141,7 +141,7 @@ class Sale:
         # Send the standard order confirmation email
         if self.party.email or current_user.email:
             email_message = render_email(
-                CONFIG['smtp_from'], self.party.email, 'Order Completed',
+                CONFIG['smtp_from'], self.party.email, 'Order Confirmed',
                 text_template='emails/sale-confirmation-text.jinja',
                 html_template='emails/sale-confirmation-html.jinja',
                 sale=self,
