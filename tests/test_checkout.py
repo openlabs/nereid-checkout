@@ -1669,6 +1669,7 @@ class TestCheckoutPayment(BaseTestCheckout):
                 payment_transaction, = sale.gateway_transactions
                 self.assertEqual(payment_transaction.amount, sale.total_amount)
                 self.assertFalse(sale.amount_to_receive)
+                self.assertTrue(sale.email_sent)
 
     def test_0110_guest_alternate_payment(self):
         "Guest - Alternate Payment Method"
