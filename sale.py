@@ -35,6 +35,7 @@ class Sale:
     #: to optionally display the order to an user who has not authenticated
     #: as yet
     guest_access_code = fields.Char('Guest Access Code')
+    email_sent = fields.Boolean('Email Sent?', readonly="True")
 
     per_page = 10
 
@@ -128,6 +129,7 @@ class Sale:
         EmailQueue = Pool().get('email.queue')
         ModelData = Pool().get('ir.model.data')
         Group = Pool().get('res.group')
+        Sale = Pool().get('sale.sale')
 
         group_id = ModelData.get_id(
             "nereid_checkout", "order_confirmation_receivers"
@@ -168,6 +170,10 @@ class Sale:
                 email_message.as_string()
             )
 
+            Sale.write([self], {
+                'email_sent': True,
+            })
+
     @classmethod
     def confirm(cls, sales):
         "Send an email after sale is confirmed"
@@ -175,6 +181,8 @@ class Sale:
 
         if has_request_context():
             for sale in sales:
+                if sale.email_sent:
+                    continue
                 sale.send_confirmation_email()
 
     def nereid_pay_using_credit_card(self, credit_card_form, amount):
