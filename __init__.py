@@ -11,7 +11,7 @@ from trytond.pool import Pool
 
 from sale import Sale
 from payment import Website, NereidPaymentMethod
-from checkout import Cart, Checkout, Party
+from checkout import Cart, Checkout, Party, Address
 
 
 def register():
@@ -22,5 +22,6 @@ def register():
         Website,
         Checkout,
         NereidPaymentMethod,
+        Address,
         type_="model", module="nereid_checkout"
     )

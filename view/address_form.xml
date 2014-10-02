@@ -1,0 +1,7 @@
+<data>
+    <xpath expr="/form/field[@name='subdivision']" position="after">
+        <newline/>
+        <label name="phone_number"/>
+        <field name="phone_number"/>
+    </xpath>
+</data>

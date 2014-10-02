@@ -10,16 +10,16 @@
 from uuid import uuid4
 
 from trytond.model import fields
-from trytond.tools import get_smtp_server
 from trytond.config import CONFIG
 from trytond.pool import PoolMeta, Pool
 
 from nereid import render_template, request, abort, login_required, \
-    current_app, route, current_user, flash, redirect, url_for
+    route, current_user, flash, redirect, url_for, jsonify
 from nereid.contrib.pagination import Pagination
 from nereid.templating import render_email
 from nereid.ctx import has_request_context
 from trytond.transaction import Transaction
+from trytond.report import Report
 
 from .i18n import _
 
@@ -35,6 +35,7 @@ class Sale:
     #: to optionally display the order to an user who has not authenticated
     #: as yet
     guest_access_code = fields.Char('Guest Access Code')
+    email_sent = fields.Boolean('Email Sent?', readonly="True")
 
     per_page = 10
 
@@ -45,14 +46,28 @@ class Sale:
     def render_list(cls, page=1):
         """Render all orders
         """
+
+        filter_by = request.args.get('filter_by', None)
+
         domain = [
             ('party', '=', request.nereid_user.party.id),
-            ('state', '!=', 'draft'),
         ]
 
-        # Handle order duration
+        if filter_by == 'processing':
+            domain.append(('state', 'in', ('processing', 'confirmed')))
 
+        elif filter_by == 'done':
+            domain.append(('state', '=', 'done'))
+
+        elif filter_by == 'canceled':
+            domain.append(('state', '=', 'cancel'))
+
+        else:
+            domain.append(('state', 'not in', ('draft', 'quotation')))
+
+        # Handle order duration
         sales = Pagination(cls, domain, page, cls.per_page)
+
         return render_template('sales.jinja', sales=sales)
 
     @route('/order/<int:active_id>')
@@ -111,23 +126,53 @@ class Sale:
            * HTML: `emails/sale-confirmation-html.jinja`
 
         """
-        try:
+        EmailQueue = Pool().get('email.queue')
+        ModelData = Pool().get('ir.model.data')
+        Group = Pool().get('res.group')
+        Sale = Pool().get('sale.sale')
+
+        group_id = ModelData.get_id(
+            "nereid_checkout", "order_confirmation_receivers"
+        )
+        to_emails = map(
+            lambda user: user.email,
+            filter(lambda user: user.email, Group(group_id).users)
+        )
+
+        if to_emails:
+            # Send the order confirmation notification email
+            subject = "New order has been placed: #%s" % self.reference
             email_message = render_email(
-                CONFIG['smtp_from'], self.party.email, 'Order Completed',
+                CONFIG['smtp_from'], to_emails, subject,
                 text_template='emails/sale-confirmation-text.jinja',
                 html_template='emails/sale-confirmation-html.jinja',
-                sale=self
+                sale=self,
+                formatLang=lambda *args, **kargs: Report.format_lang(
+                    *args, **kargs)
             )
-            server = get_smtp_server()
-            server.sendmail(
-                CONFIG['smtp_from'], [self.party.email],
+            EmailQueue.queue_mail(
+                CONFIG['smtp_from'], to_emails, email_message.as_string()
+            )
+
+        # Send the standard order confirmation email
+        if self.party.email or current_user.email:
+            email_message = render_email(
+                CONFIG['smtp_from'], self.party.email, 'Order Confirmed',
+                text_template='emails/sale-confirmation-text.jinja',
+                html_template='emails/sale-confirmation-html.jinja',
+                sale=self,
+                formatLang=lambda *args, **kargs: Report.format_lang(
+                    *args, **kargs)
+            )
+
+            EmailQueue.queue_mail(
+                CONFIG['smtp_from'], self.party.email or current_user.email,
                 email_message.as_string()
             )
-            server.quit()
-        except Exception, exc:
-            if not silent:
-                raise
-            current_app.logger.error(exc)
+
+            Sale.write([self], {
+                'email_sent': True,
+            })
 
     @classmethod
     def confirm(cls, sales):
@@ -136,6 +181,8 @@ class Sale:
 
         if has_request_context():
             for sale in sales:
+                if sale.email_sent:
+                    continue
                 sale.send_confirmation_email()
 
     def nereid_pay_using_credit_card(self, credit_card_form, amount):
@@ -230,3 +277,36 @@ class Sale:
                 url_for('nereid.checkout.payment_method')
             )
         return self._pay_using_profile(payment_profile, amount)
+
+    @route('/order/<int:active_id>/add-comment', methods=['POST'])
+    def add_comment_to_sale(self):
+        """
+        Add comment to sale.
+
+        User can add comment or note to sale order.
+        """
+        comment_is_allowed = False
+        if current_user.is_anonymous():
+            access_code = request.values.get('access_code', None)
+            if access_code and access_code == self.guest_access_code:
+                # No access code provided
+                comment_is_allowed = True
+
+        elif current_user.is_authenticated() and \
+                current_user.party == self.party:
+            comment_is_allowed = True
+
+        if not comment_is_allowed:
+            abort(403)
+
+        if request.form.get('comment') and not self.comment:
+            self.comment = request.form.get('comment')
+            self.save()
+            if request.is_xhr:
+                return jsonify({
+                    'message': 'Comment Added',
+                    'comment': self.comment,
+                })
+
+            flash(_('Comment Added'))
+        return redirect(request.referrer)
