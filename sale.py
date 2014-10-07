@@ -81,6 +81,8 @@ class Sale:
                              also passes a `True` if such an argument is proved
                              or a `False`
         """
+        NereidUser = Pool().get('nereid.user')
+
         # This Ugly type hack is for a bug in previous versions where some
         # parts of the code passed confirmation as a text
         confirmation = False if confirmation is None else True
@@ -90,8 +92,9 @@ class Sale:
 
         if current_user.is_anonymous():
             if not access_code:
-                # No access code provided
-                abort(403)
+                # No access code provided, user is not authorized to
+                # access order page
+                return NereidUser.unauthorized_handler()
             if access_code != self.guest_access_code:
                 # Invalid access code
                 abort(403)

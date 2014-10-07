@@ -50,6 +50,7 @@ class BaseTestCheckout(BaseTestCase):
             'emails/sale-confirmation-text.jinja': ' ',
             'emails/sale-confirmation-html.jinja': ' ',
             'checkout.jinja': '{{form.errors|safe}}',
+            'sale.jinja': ' ',
         })
 
         # Patch SMTP Lib
@@ -2180,6 +2181,54 @@ class TestCheckoutPayment(BaseTestCheckout):
                 self.assertEqual('Comment Added', json_data)
 
                 self.assertEqual('This is comment on sale!', sale.comment)
+
+    def test_0300_access_order_page(self):
+        """
+        Test access order page
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            Sale = POOL.get('sale.sale')
+
+            # Define a new payment gateway
+            self._create_auth_net_gateway_for_site()
+
+            with app.test_client() as c:
+                self._create_guest_order(c)
+
+                # pay using credit card
+                rv = c.post(
+                    '/checkout/payment',
+                    data={
+                        'owner': 'Joe Blow',
+                        'number': '4111111111111111',
+                        'expiry_year': '2018',
+                        'expiry_month': '01',
+                        'cvv': '911',
+                    }
+                )
+                self.assertEqual(rv.status_code, 302)
+                self.assertTrue('/order/' in rv.location)
+                self.assertTrue('access_code' in rv.location)
+
+                sale, = Sale.search([('state', '=', 'confirmed')])
+
+                rv = c.get('/order/%s' % (sale.id, ))
+                self.assertEqual(rv.status_code, 302)  # Redirect to login
+
+                rv = c.get(
+                    '/order/%s?access_code=%s' % (sale.id, "wrong-access-code")
+                )
+                self.assertEqual(rv.status_code, 403)
+
+                rv = c.get(
+                    '/order/%s?access_code=%s' % (
+                        sale.id, sale.guest_access_code
+                    )
+                )
+                self.assertEqual(rv.status_code, 200)
 
 
 def suite():
