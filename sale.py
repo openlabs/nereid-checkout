@@ -134,6 +134,7 @@ class Sale:
         Group = Pool().get('res.group')
         Sale = Pool().get('sale.sale')
 
+        # TODO: Instead of 2 emails, merge them into one
         group_id = ModelData.get_id(
             "nereid_checkout", "order_confirmation_receivers"
         )
@@ -158,9 +159,14 @@ class Sale:
             )
 
         # Send the standard order confirmation email
-        if self.party.email or current_user.email:
+        to_emails = set()
+        if self.party.email:
+            to_emails.add(self.party.email.lower())
+        if not current_user.is_anonymous() and current_user.email:
+            to_emails.add(current_user.email.lower())
+        if to_emails:
             email_message = render_email(
-                CONFIG['smtp_from'], self.party.email, 'Order Confirmed',
+                CONFIG['smtp_from'], list(to_emails), 'Order Confirmed',
                 text_template='emails/sale-confirmation-text.jinja',
                 html_template='emails/sale-confirmation-html.jinja',
                 sale=self,
@@ -169,7 +175,7 @@ class Sale:
             )
 
             EmailQueue.queue_mail(
-                CONFIG['smtp_from'], self.party.email or current_user.email,
+                CONFIG['smtp_from'], list(to_emails),
                 email_message.as_string()
             )
 
