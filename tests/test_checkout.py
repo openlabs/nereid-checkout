@@ -408,7 +408,8 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
 
                 # Assert that just one address was created
                 party, = self.Party.search([
-                    ('name', 'ilike', '%new@example.com%')
+                    ('contact_mechanisms.value', '=', 'new@example.com'),
+                    ('contact_mechanisms.type', '=', 'email')
                 ])
                 self.assertTrue(party)
                 self.assertEqual(len(party.addresses), 1)
@@ -441,7 +442,8 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
                 # Assert that the same address was updated and a new one
                 # was not created
                 party, = self.Party.search([
-                    ('name', 'ilike', '%new@example.com%')
+                    ('contact_mechanisms.value', '=', 'new@example.com'),
+                    ('contact_mechanisms.type', '=', 'email')
                 ])
                 self.assertTrue(party)
                 self.assertEqual(len(party.addresses), 1)
@@ -1200,7 +1202,8 @@ class TestCheckoutBillingAddress(BaseTestCheckout):
 
                 # Assert that just one address was created
                 party, = self.Party.search([
-                    ('name', 'ilike', '%new@example.com%')
+                    ('contact_mechanisms.value', '=', 'new@example.com'),
+                    ('contact_mechanisms.type', '=', 'email')
                 ])
                 self.assertTrue(party)
                 self.assertEqual(len(party.addresses), 1)
@@ -1454,7 +1457,8 @@ class TestCheckoutPayment(BaseTestCheckout):
 
                 # Assert that just one address was created
                 party, = self.Party.search([
-                    ('name', 'ilike', '%new@example.com%')
+                    ('contact_mechanisms.value', '=', 'new@example.com'),
+                    ('contact_mechanisms.type', '=', 'email'),
                 ])
                 self.assertTrue(party)
                 self.assertEqual(len(party.addresses), 1)
@@ -1671,6 +1675,53 @@ class TestCheckoutPayment(BaseTestCheckout):
                 self.assertEqual(payment_transaction.amount, sale.total_amount)
                 self.assertFalse(sale.amount_to_receive)
                 self.assertTrue(sale.email_sent)
+
+    def test_0105_update_guest_name_with_address_name(self):
+        "Check if guest user name is updated as per billing address"
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            Sale = POOL.get('sale.sale')
+
+            with app.test_client() as c:
+                self._create_guest_order(c)
+
+                # Define a new payment gateway
+                self._create_auth_net_gateway_for_site()
+
+                # Check party name on checkout
+                party, = self.Party.search([
+                    ('contact_mechanisms.value', '=', 'new@example.com'),
+                    ('contact_mechanisms.type', '=', 'email')
+                ])
+                self.assertEqual(
+                    party.name, 'Guest with email: new@example.com'
+                )
+
+                # Try to pay using credit card
+                rv = c.post(
+                    '/checkout/payment',
+                    data={
+                        'owner': 'Joe Blow',
+                        'number': '4111111111111111',
+                        'expiry_year': '2018',
+                        'expiry_month': '01',
+                        'cvv': '911',
+                    }
+                )
+                self.assertEqual(rv.status_code, 302)
+                self.assertTrue('/order/' in rv.location)
+                self.assertTrue('access_code' in rv.location)
+
+                sale, = Sale.search([('state', '=', 'confirmed')])
+
+                # Party name is updated with the name on shipping address
+                party, = self.Party.search([
+                    ('contact_mechanisms.value', '=', 'new@example.com'),
+                    ('contact_mechanisms.type', '=', 'email')
+                ])
+                self.assertEqual(party.name, 'Sharoon Thomas')
 
     def test_0110_guest_alternate_payment(self):
         "Guest - Alternate Payment Method"
