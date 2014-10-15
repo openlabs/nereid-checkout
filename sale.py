@@ -39,6 +39,13 @@ class Sale:
 
     per_page = 10
 
+    @staticmethod
+    def default_guest_access_code():
+        """A guest access code must be written to the guest_access_code of the
+        sale order so that it could be accessed without a login
+        """
+        return unicode(uuid4())
+
     @classmethod
     @route('/orders')
     @route('/orders/<int:page>')
@@ -106,16 +113,6 @@ class Sale:
         return render_template(
             'sale.jinja', sale=self, confirmation=confirmation
         )
-
-    def create_guest_access_code(self):
-        """A guest access code must be written to the guest_access_code of the
-        sale order so that it could be accessed wihtout a login
-
-        :param sale: ID of the sale order
-        """
-        access_code = uuid4()
-        self.write([self], {'guest_access_code': unicode(access_code)})
-        return access_code
 
     def send_confirmation_email(self, silent=True):
         """An email confirming that the order has been confirmed and that we
