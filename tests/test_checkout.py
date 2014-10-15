@@ -1821,7 +1821,6 @@ class TestCheckoutPayment(BaseTestCheckout):
                 )
                 self.assertEqual(rv.status_code, 302)
                 self.assertTrue('/order/' in rv.location)
-                self.assertTrue('access_code' not in rv.location)
 
                 sale, = Sale.search([('state', '=', 'confirmed')])
                 payment_transaction, = sale.gateway_transactions
@@ -1879,7 +1878,6 @@ class TestCheckoutPayment(BaseTestCheckout):
                 )
                 self.assertEqual(rv.status_code, 302)
                 self.assertTrue('/order/' in rv.location)
-                self.assertTrue('access_code' not in rv.location)
 
                 sale, = Sale.search([('state', '=', 'confirmed')])
                 payment_transaction, = sale.gateway_transactions
@@ -1910,7 +1908,6 @@ class TestCheckoutPayment(BaseTestCheckout):
                 )
                 self.assertEqual(rv.status_code, 302)
                 self.assertTrue('/order/' in rv.location)
-                self.assertTrue('access_code' not in rv.location)
 
                 sale, = Sale.search([('state', '=', 'confirmed')])
                 payment_transaction, = sale.gateway_transactions
@@ -1973,7 +1970,6 @@ class TestCheckoutPayment(BaseTestCheckout):
                 )
                 self.assertEqual(rv.status_code, 302)
                 self.assertTrue('/order/' in rv.location)
-                self.assertTrue('access_code' not in rv.location)
 
                 sale, = Sale.search([('state', '=', 'confirmed')])
                 payment_transaction, = sale.gateway_transactions
@@ -1995,7 +1991,6 @@ class TestCheckoutPayment(BaseTestCheckout):
                 )
                 self.assertEqual(rv.status_code, 302)
                 self.assertTrue('/order/' in rv.location)
-                self.assertTrue('access_code' not in rv.location)
 
                 sale, = Sale.search([
                     ('id', '!=', sale.id),  # Not previous sale

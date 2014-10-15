@@ -732,11 +732,6 @@ class Checkout(ModelView):
         Sale = Pool().get('sale.sale')
 
         sale = cart.sale
-        access_code = None
-
-        if current_user.is_anonymous():
-            access_code = unicode(sale.create_guest_access_code())
-
         Sale.quote([cart.sale])
         Sale.confirm([cart.sale])
 
@@ -751,7 +746,7 @@ class Checkout(ModelView):
 
         return redirect(url_for(
             'sale.sale.render', active_id=sale.id, confirmation=True,
-            access_code=access_code,
+            access_code=sale.guest_access_code,
         ))
 
 
