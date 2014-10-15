@@ -70,7 +70,7 @@ class Sale:
             domain.append(('state', '=', 'cancel'))
 
         else:
-            domain.append(('state', 'not in', ('draft', 'quotation')))
+            domain.append(('state', 'not in', ('draft', 'quotation', 'cancel')))
 
         # Handle order duration
         sales = Pagination(cls, domain, page, cls.per_page)
