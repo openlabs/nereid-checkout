@@ -313,7 +313,8 @@ class Sale:
         if not comment_is_allowed:
             abort(403)
 
-        if request.form.get('comment') and not self.comment:
+        if request.form.get('comment') and not self.comment \
+                and self.state == 'confirmed':
             self.comment = request.form.get('comment')
             self.save()
             if request.is_xhr:
