@@ -2279,16 +2279,17 @@ class TestCheckoutPayment(BaseTestCheckout):
 
 def suite():
     "Checkout test suite"
-    suite = unittest.TestSuite()
+    "Define suite"
+    test_suite = trytond.tests.test_tryton.suite()
     loader = unittest.TestLoader()
-    suite.addTests([
+    test_suite.addTests(
         loader.loadTestsFromTestCase(TestCheckoutSignIn),
         loader.loadTestsFromTestCase(TestCheckoutShippingAddress),
         loader.loadTestsFromTestCase(TestCheckoutDeliveryMethod),
         loader.loadTestsFromTestCase(TestCheckoutBillingAddress),
         loader.loadTestsFromTestCase(TestCheckoutPayment),
-    ])
-    return suite
+    )
+    return test_suite
 
 
 if __name__ == '__main__':

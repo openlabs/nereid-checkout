@@ -7,17 +7,20 @@
     :copyright: (c) 2010-2014 by Openlabs Technologies & Consulting (P) LTD.
     :license: GPLv3, see LICENSE for more details
 """
+import warnings
 from datetime import datetime
 from functools import wraps
 
 from nereid import render_template, request, url_for, flash, redirect, \
-    current_app, current_user, route
+    current_app, current_user, route, login_required
 from nereid.signals import failed_login
 from nereid.globals import session
 from flask.ext.login import login_user
 from flask_wtf import Form
 from wtforms import TextField, RadioField, validators, PasswordField, \
     ValidationError, SelectField, BooleanField
+from werkzeug import abort
+from jinja2 import TemplateNotFound
 from werkzeug.wrappers import BaseResponse
 from trytond.model import ModelView, fields
 from trytond.pool import Pool, PoolMeta
@@ -763,3 +766,114 @@ class Address:
             ('party', '=', Eval('party'))
         ], depends=['party'], select=True
     )
+
+    @classmethod
+    @route("/create-address", methods=["GET", "POST"])
+    @login_required
+    def create_address(cls):
+        """
+        Create an address for the current nereid_user
+
+        GET
+        ~~~
+
+        Return an address creation form
+
+        POST
+        ~~~~
+
+        Creates an address and redirects to the address view. If a next_url
+        is provided, redirects there.
+
+        .. version_added: 3.0.3.0
+        """
+        form = cls.get_address_form()
+
+        if request.method == 'POST' and form.validate_on_submit():
+            party = request.nereid_user.party
+            address, = cls.create([{
+                'name': form.name.data,
+                'street': form.street.data,
+                'streetbis': form.streetbis.data,
+                'zip': form.zip.data,
+                'city': form.city.data,
+                'country': form.country.data,
+                'subdivision': form.subdivision.data,
+                'party': party.id,
+            }])
+            if form.phone.data:
+                phone = party.add_contact_mechanism_if_not_exists(
+                    'phone', form.phone.data
+                )
+                cls.write([address], {
+                    'phone_number': phone.id
+                })
+            return redirect(url_for('party.address.view_address'))
+
+        try:
+            return render_template('address-add.jinja', form=form)
+        except TemplateNotFound:
+            # The address-add template was introduced in 3.0.3.0
+            # so just raise a deprecation warning till 3.2.X and then
+            # expect the use of address-add template
+            warnings.warn(
+                "address-add.jinja template not found. "
+                "Will be required in future versions",
+                DeprecationWarning
+            )
+            return render_template('address-edit.jinja', form=form)
+
+    @classmethod
+    @route("/save-new-address", methods=["GET", "POST"])
+    @route("/edit-address/<int:address>", methods=["GET", "POST"])
+    @login_required
+    def edit_address(cls, address=None):
+        """
+        Edit an Address
+
+        POST will update an existing address.
+        GET will return a existing address edit form.
+
+        .. version_changed:: 3.0.3.0
+
+            For creating new address use the create_address handled instead of
+            this one. The functionality would be deprecated in 3.2.X
+
+        :param address: ID of the address
+        """
+        if address is None:
+            warnings.warn(
+                "Address creation will be deprecated from edit_address handler."
+                " Use party.address.create_address instead",
+                DeprecationWarning
+            )
+            return cls.create_address()
+
+        address = cls(address)
+        if address.party != request.nereid_user.party:
+            # Check if the address belong to party
+            abort(403)
+
+        form = cls.get_address_form(address)
+
+        if request.method == 'POST' and form.validate_on_submit():
+            party = request.nereid_user.party
+            cls.write([address], {
+                'name': form.name.data,
+                'street': form.street.data,
+                'streetbis': form.streetbis.data,
+                'zip': form.zip.data,
+                'city': form.city.data,
+                'country': form.country.data,
+                'subdivision': form.subdivision.data,
+            })
+            if form.phone.data:
+                phone = party.add_contact_mechanism_if_not_exists(
+                    'phone', form.phone.data
+                )
+                cls.write([address], {
+                    'phone_number': phone.id
+                })
+            return redirect(url_for('party.address.view_address'))
+
+        return render_template('address-edit.jinja', form=form, address=address)
