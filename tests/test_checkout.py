@@ -1821,7 +1821,6 @@ class TestCheckoutPayment(BaseTestCheckout):
                 )
                 self.assertEqual(rv.status_code, 302)
                 self.assertTrue('/order/' in rv.location)
-                self.assertTrue('access_code' not in rv.location)
 
                 sale, = Sale.search([('state', '=', 'confirmed')])
                 payment_transaction, = sale.gateway_transactions
@@ -1879,7 +1878,6 @@ class TestCheckoutPayment(BaseTestCheckout):
                 )
                 self.assertEqual(rv.status_code, 302)
                 self.assertTrue('/order/' in rv.location)
-                self.assertTrue('access_code' not in rv.location)
 
                 sale, = Sale.search([('state', '=', 'confirmed')])
                 payment_transaction, = sale.gateway_transactions
@@ -1910,7 +1908,6 @@ class TestCheckoutPayment(BaseTestCheckout):
                 )
                 self.assertEqual(rv.status_code, 302)
                 self.assertTrue('/order/' in rv.location)
-                self.assertTrue('access_code' not in rv.location)
 
                 sale, = Sale.search([('state', '=', 'confirmed')])
                 payment_transaction, = sale.gateway_transactions
@@ -1973,7 +1970,6 @@ class TestCheckoutPayment(BaseTestCheckout):
                 )
                 self.assertEqual(rv.status_code, 302)
                 self.assertTrue('/order/' in rv.location)
-                self.assertTrue('access_code' not in rv.location)
 
                 sale, = Sale.search([('state', '=', 'confirmed')])
                 payment_transaction, = sale.gateway_transactions
@@ -1995,7 +1991,6 @@ class TestCheckoutPayment(BaseTestCheckout):
                 )
                 self.assertEqual(rv.status_code, 302)
                 self.assertTrue('/order/' in rv.location)
-                self.assertTrue('access_code' not in rv.location)
 
                 sale, = Sale.search([
                     ('id', '!=', sale.id),  # Not previous sale
@@ -2284,16 +2279,17 @@ class TestCheckoutPayment(BaseTestCheckout):
 
 def suite():
     "Checkout test suite"
-    suite = unittest.TestSuite()
+    "Define suite"
+    test_suite = trytond.tests.test_tryton.suite()
     loader = unittest.TestLoader()
-    suite.addTests([
+    test_suite.addTests(
         loader.loadTestsFromTestCase(TestCheckoutSignIn),
         loader.loadTestsFromTestCase(TestCheckoutShippingAddress),
         loader.loadTestsFromTestCase(TestCheckoutDeliveryMethod),
         loader.loadTestsFromTestCase(TestCheckoutBillingAddress),
         loader.loadTestsFromTestCase(TestCheckoutPayment),
-    ])
-    return suite
+    )
+    return test_suite
 
 
 if __name__ == '__main__':

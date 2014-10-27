@@ -39,6 +39,13 @@ class Sale:
 
     per_page = 10
 
+    @staticmethod
+    def default_guest_access_code():
+        """A guest access code must be written to the guest_access_code of the
+        sale order so that it could be accessed without a login
+        """
+        return unicode(uuid4())
+
     @classmethod
     @route('/orders')
     @route('/orders/<int:page>')
@@ -63,7 +70,7 @@ class Sale:
             domain.append(('state', '=', 'cancel'))
 
         else:
-            domain.append(('state', 'not in', ('draft', 'quotation')))
+            domain.append(('state', 'not in', ('draft', 'quotation', 'cancel')))
 
         # Handle order duration
         sales = Pagination(cls, domain, page, cls.per_page)
@@ -106,16 +113,6 @@ class Sale:
         return render_template(
             'sale.jinja', sale=self, confirmation=confirmation
         )
-
-    def create_guest_access_code(self):
-        """A guest access code must be written to the guest_access_code of the
-        sale order so that it could be accessed wihtout a login
-
-        :param sale: ID of the sale order
-        """
-        access_code = uuid4()
-        self.write([self], {'guest_access_code': unicode(access_code)})
-        return access_code
 
     def send_confirmation_email(self, silent=True):
         """An email confirming that the order has been confirmed and that we
@@ -313,7 +310,8 @@ class Sale:
         if not comment_is_allowed:
             abort(403)
 
-        if request.form.get('comment') and not self.comment:
+        if request.form.get('comment') and not self.comment \
+                and self.state == 'confirmed':
             self.comment = request.form.get('comment')
             self.save()
             if request.is_xhr:
