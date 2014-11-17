@@ -297,6 +297,10 @@ class Sale:
         User can add comment or note to sale order.
         """
         comment_is_allowed = False
+
+        if self.state not in ['confirmed', 'processing']:
+            abort(403)
+
         if current_user.is_anonymous():
             access_code = request.values.get('access_code', None)
             if access_code and access_code == self.guest_access_code:
