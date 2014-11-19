@@ -8,6 +8,8 @@
     :license: GPLv3, see LICENSE for more details.
 """
 from uuid import uuid4
+from datetime import date
+from dateutil.relativedelta import relativedelta
 
 from trytond.model import fields
 from trytond.config import CONFIG
@@ -71,6 +73,14 @@ class Sale:
 
         else:
             domain.append(('state', 'not in', ('draft', 'quotation', 'cancel')))
+
+            # Add a sale_date domain for recent orders.
+            req_date = (
+                date.today() + relativedelta(months=-3)
+            )
+            domain.append((
+                'sale_date', '>=', req_date
+            ))
 
         # Handle order duration
         sales = Pagination(cls, domain, page, cls.per_page)
