@@ -263,7 +263,7 @@ class TestAddress(NereidTestCase):
         """
         Add an address for the user.
         """
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -322,7 +322,7 @@ class TestAddress(NereidTestCase):
         """
         Edit an address for the user
         """
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 

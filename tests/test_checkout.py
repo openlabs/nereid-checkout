@@ -125,7 +125,7 @@ class TestCheckoutSignIn(BaseTestCheckout):
 
     def test_0010_check_cart(self):
         """Assert nothing added by this module broke the cart."""
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app(DEBUG=True)
 
@@ -147,7 +147,7 @@ class TestCheckoutSignIn(BaseTestCheckout):
 
     def test_0015_signin_with_empty_cart(self):
         "Sign in with empty cart should redirect"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -183,7 +183,7 @@ class TestCheckoutSignIn(BaseTestCheckout):
 
     def test_0030_guest_valid(self):
         """Submit as guest with a new email"""
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -209,7 +209,7 @@ class TestCheckoutSignIn(BaseTestCheckout):
         checkout, the default behavior is to show a help page in the
         template checkout/signin-email-in-use.jinja.
         """
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -234,7 +234,7 @@ class TestCheckoutSignIn(BaseTestCheckout):
 
     def test_0040_registered_user_signin_wrong(self):
         """A registered user signs in with wrong credntials"""
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -256,7 +256,7 @@ class TestCheckoutSignIn(BaseTestCheckout):
 
     def test_0045_registered_user_signin(self):
         """A registered user signs in with right credntials"""
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -282,7 +282,7 @@ class TestCheckoutSignIn(BaseTestCheckout):
 
     def test_0050_recent_signins_auto_proceed(self):
         "Recent signings can have an automatic proceed"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -317,7 +317,7 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
 
     def test_0005_no_skip_signin(self):
         "Ensure that guest orders cant directly skip to enter shipping address"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -335,7 +335,7 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
 
     def test_0010_guest_get_address_page(self):
         "Guest user goes to shipping address after sign-in"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -364,7 +364,7 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
 
     def test_0020_guest_adds_address(self):
         "Guest user goes to shipping address after sign-in and adds address"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -458,7 +458,7 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
 
     def test_0030_guest_misuse_existing_address(self):
         "Guest user fucks with the system by sending an existing address"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -496,7 +496,7 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
 
     def test_0040_regd_user_new_address(self):
         "Regd. user creates a new address"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -607,7 +607,7 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
 
     def test_0050_regd_user_use_existing_address(self):
         "Regd. user uses one of his existing addresses"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -675,7 +675,7 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
 
     def test_0060_regd_user_wrong_address(self):
         "Regd. user fucks with the system by sending someone else's address"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -726,7 +726,7 @@ class TestCheckoutDeliveryMethod(BaseTestCheckout):
 
     def test_0005_no_skip_signin(self):
         "Ensure that guest orders cant directly skip to enter delivery method"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -744,7 +744,7 @@ class TestCheckoutDeliveryMethod(BaseTestCheckout):
 
     def test_0010_no_skip_signin(self):
         "Ensure that guest orders cant directly skip to enter delivery method"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -778,7 +778,7 @@ class TestCheckoutBillingAddress(BaseTestCheckout):
 
     def test_0005_no_skip_signin(self):
         "Ensure that guest orders cant directly skip to enter shipping address"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -796,7 +796,7 @@ class TestCheckoutBillingAddress(BaseTestCheckout):
 
     def test_0020_guest_adds_address(self):
         "Guest user goes to billing address after sign-in and adds address"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -888,7 +888,7 @@ class TestCheckoutBillingAddress(BaseTestCheckout):
 
     def test_0030_guest_misuse_existing_address(self):
         "Guest user fucks with the system by sending an existing address"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -926,7 +926,7 @@ class TestCheckoutBillingAddress(BaseTestCheckout):
 
     def test_0040_regd_user_new_address(self):
         "Regd. user creates a new address"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -1036,7 +1036,7 @@ class TestCheckoutBillingAddress(BaseTestCheckout):
 
     def test_0050_regd_user_use_existing_address(self):
         "Regd. user uses one of his existing addresses"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -1104,7 +1104,7 @@ class TestCheckoutBillingAddress(BaseTestCheckout):
 
     def test_0060_regd_user_wrong_address(self):
         "Regd. user fucks with the system by sending someone else's address"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -1151,7 +1151,7 @@ class TestCheckoutBillingAddress(BaseTestCheckout):
 
     def test_0070_guest_use_delivery_as_billing(self):
         "Guest user uses shipping address for billing"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -1219,7 +1219,7 @@ class TestCheckoutBillingAddress(BaseTestCheckout):
 
     def test_0080_regd_use_delivery_as_billing(self):
         "Regd. user uses shipping address for billing"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -1286,7 +1286,7 @@ class TestCheckoutPayment(BaseTestCheckout):
 
     def test_0005_no_skip_signin(self):
         "Ensure that guest orders cant directly skip to enter shipping address"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -1311,7 +1311,7 @@ class TestCheckoutPayment(BaseTestCheckout):
         page even without a invoice_address
         """
 
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -1363,7 +1363,7 @@ class TestCheckoutPayment(BaseTestCheckout):
         it.
         """
 
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -1412,7 +1412,7 @@ class TestCheckoutPayment(BaseTestCheckout):
 
     def test_0030_address_with_payment(self):
         "Send address along with payment"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -1613,6 +1613,7 @@ class TestCheckoutPayment(BaseTestCheckout):
             method='credit_card',
             authorize_net_login='327deWY74422',
             authorize_net_transaction_key='32jF65cTxja88ZA2',
+            test=True
         )
         gatway.save()
 
@@ -1625,7 +1626,7 @@ class TestCheckoutPayment(BaseTestCheckout):
 
     def test_0100_guest_credit_card(self):
         "Guest - Credit Card"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -1678,7 +1679,7 @@ class TestCheckoutPayment(BaseTestCheckout):
 
     def test_0105_update_guest_name_with_address_name(self):
         "Check if guest user name is updated as per billing address"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -1725,7 +1726,7 @@ class TestCheckoutPayment(BaseTestCheckout):
 
     def test_0110_guest_alternate_payment(self):
         "Guest - Alternate Payment Method"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -1753,7 +1754,7 @@ class TestCheckoutPayment(BaseTestCheckout):
 
     def test_0120_guest_profile_fail(self):
         "Guest - Fucks with profile"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -1776,7 +1777,7 @@ class TestCheckoutPayment(BaseTestCheckout):
 
     def test_0200_regd_new_credit_card_wo_save(self):
         "Regd User - Credit Card"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -1833,7 +1834,7 @@ class TestCheckoutPayment(BaseTestCheckout):
 
     def test_0205_regd_new_credit_card(self):
         "Regd User - Credit Card and save it"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -1889,7 +1890,7 @@ class TestCheckoutPayment(BaseTestCheckout):
 
     def test_0210_regd_alternate_payment(self):
         "Regd User - Alternate Payment Method"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -1918,7 +1919,7 @@ class TestCheckoutPayment(BaseTestCheckout):
         "Regd User - Fucks with profile"
         NereidUser = POOL.get('nereid.user')
 
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -1944,7 +1945,7 @@ class TestCheckoutPayment(BaseTestCheckout):
 
     def test_0225_regd_profile_success(self):
         "Regd User - Correct with profile"
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -2013,13 +2014,18 @@ class TestCheckoutPayment(BaseTestCheckout):
         Gateway = POOL.get('payment_gateway.gateway')
         Journal = POOL.get('account.journal')
 
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
             self.party2, = self.Party.create([{
                 'name': 'Registered User',
             }])
+            self.Party.write(
+                [self.registered_user.party], {
+                    'authorize_profile_id': '28545177',
+                }
+            )
             with app.test_client() as c:
                 self.login(c, 'email@example.com', 'password')
 
@@ -2051,7 +2057,7 @@ class TestCheckoutPayment(BaseTestCheckout):
                     'expiry_year': '2018',
                     'address': address.id,
                     'party': current_user.party.id,
-                    'provider_reference': '27478839|25062702',
+                    'provider_reference': '26037832',
                     'gateway': gateway.id,
                 }])
                 self.assertEqual(
@@ -2095,16 +2101,20 @@ class TestCheckoutPayment(BaseTestCheckout):
         Gateway = POOL.get('payment_gateway.gateway')
         Journal = POOL.get('account.journal')
 
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
             self.party2, = self.Party.create([{
                 'name': 'Registered User',
             }])
+            self.Party.write(
+                [self.registered_user.party], {
+                    'authorize_profile_id': '28545177',
+                }
+            )
             with app.test_client() as c:
                 self.login(c, 'email@example.com', 'password')
-
                 address, = Address.create([{
                     'party': current_user.party.id,
                     'name': 'Name',
@@ -2133,7 +2143,7 @@ class TestCheckoutPayment(BaseTestCheckout):
                     'expiry_year': '2018',
                     'address': address.id,
                     'party': current_user.party.id,
-                    'provider_reference': '27478839|25062702',
+                    'provider_reference': '26037832',
                     'gateway': gateway.id,
                 }])
                 self.assertEqual(
@@ -2176,7 +2186,7 @@ class TestCheckoutPayment(BaseTestCheckout):
         """
         Add comment to sale for guest user
         """
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -2232,7 +2242,7 @@ class TestCheckoutPayment(BaseTestCheckout):
         """
         Test access order page
         """
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
