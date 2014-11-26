@@ -2182,6 +2182,35 @@ class TestCheckoutPayment(BaseTestCheckout):
                 )
                 self.assertTrue(rv.status_code, 302)
 
+    def test_0245_no_comment_on_cancelled_sale(self):
+        """
+        Trying to comment on a cancelled sale should return 403.
+        """
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            with app.test_client() as c:
+                self.login(c, 'email@example.com', 'password')
+
+                # Create sale.
+                sale, = self.Sale.create([{
+                    'party': self.registered_user.party.id,
+                    'company': self.company.id,
+                    'currency': self.usd.id,
+                }])
+
+                # Cancel the sale order now.
+                self.Sale.cancel([sale])
+
+                # Try commenting.
+                rv = c.post(
+                    '/order/%s/add-comment' % (sale.id,), data={
+                        'comment': 'This is comment!'
+                    }
+                )
+                self.assertEqual(rv.status_code, 403)
+
     def test_0250_add_comment_to_guest_sale(self):
         """
         Add comment to sale for guest user
