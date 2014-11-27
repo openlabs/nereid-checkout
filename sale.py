@@ -55,29 +55,35 @@ class Sale:
     def render_list(cls, page=1):
         """Render all orders
         """
-
         filter_by = request.args.get('filter_by', None)
 
         domain = [
             ('party', '=', request.nereid_user.party.id),
         ]
+        req_date = (
+            date.today() + relativedelta(months=-3)
+        )
 
-        if filter_by == 'processing':
-            domain.append(('state', 'in', ('processing', 'confirmed')))
-
-        elif filter_by == 'done':
+        if filter_by == 'done':
             domain.append(('state', '=', 'done'))
 
         elif filter_by == 'canceled':
             domain.append(('state', '=', 'cancel'))
 
+        elif filter_by == 'archived':
+            domain.append(
+                ('state', 'not in', ('draft', 'quotation'))
+            )
+
+            # Add a sale_date domain for recent orders.
+            domain.append((
+                'sale_date', '<', req_date
+            ))
+
         else:
             domain.append(('state', 'not in', ('draft', 'quotation', 'cancel')))
 
             # Add a sale_date domain for recent orders.
-            req_date = (
-                date.today() + relativedelta(months=-3)
-            )
             domain.append((
                 'sale_date', '>=', req_date
             ))

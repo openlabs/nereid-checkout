@@ -12,6 +12,7 @@ from ast import literal_eval
 from mock import patch
 from decimal import Decimal
 import json
+from datetime import date
 
 import trytond.tests.test_tryton
 from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
@@ -37,6 +38,8 @@ class BaseTestCheckout(BaseTestCase):
         trytond.tests.test_tryton.install_module('nereid_checkout')
 
         self.Journal = POOL.get('account.journal')
+        self.Category = POOL.get('product.category')
+        self.Account = POOL.get('account.account')
 
         self.templates.update({
             'checkout/signin.jinja': '{{form.errors|safe}}',
@@ -51,6 +54,9 @@ class BaseTestCheckout(BaseTestCase):
             'emails/sale-confirmation-html.jinja': ' ',
             'checkout.jinja': '{{form.errors|safe}}',
             'sale.jinja': ' ',
+            'sales.jinja': '''{{request.args.get('filter_by')}}
+                {% for sale in sales %}#{{sale.id}}{% endfor %}
+            '''
         })
 
         # Patch SMTP Lib
@@ -87,6 +93,46 @@ class BaseTestCheckout(BaseTestCase):
                 'name': self.registered_user2.party.name,
             },
         ])
+
+        self.uom, = self.Uom.search([('symbol', '=', 'cm')])
+
+        self.product = self.create_product()
+
+    def create_product(self):
+        """
+        Create product
+        """
+        # Create product category
+        category, = self.Category.create([{
+            'name': 'Test Category',
+            'uri': 'prodcat',
+        }])
+
+        account_revenue, = self.Account.search([
+            ('kind', '=', 'revenue')
+        ])
+
+        self.uom_kg, = self.Uom.search([('symbol', '=', 'kg')])
+
+        # Create product
+        template, = self.ProductTemplate.create([{
+            'name': 'Test Product',
+            'category': category.id,
+            'type': 'goods',
+            'sale_uom': self.uom,
+            'list_price': Decimal('10'),
+            'cost_price': Decimal('5'),
+            'default_uom': self.uom,
+            'salable': True,
+            'account_revenue': account_revenue.id,
+            'products': [
+                ('create', [{
+                    'code': 'Test Product'
+                }])
+            ]
+        }])
+
+        return template.products[0]
 
     def _create_pricelists(self):
         """
@@ -2314,6 +2360,103 @@ class TestCheckoutPayment(BaseTestCheckout):
                     )
                 )
                 self.assertEqual(rv.status_code, 200)
+
+    def test_0305_orders_page_regd(self):
+        """
+        Accesses orders page for a registered user.
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            Sale = POOL.get('sale.sale')
+
+            party = self.registered_user.party
+
+            with app.test_client() as c:
+                self.login(c, 'email@example.com', 'password')
+
+                # Create sales.
+                with Transaction().set_context(company=self.company.id):
+                    sale1, = Sale.create([{
+                        'reference': 'Sale1',
+                        'sale_date': date.today(),
+                        'invoice_address': party.addresses[0].id,
+                        'shipment_address': party.addresses[0].id,
+                        'party': party.id,
+                        'lines': [
+                            ('create', [{
+                                'type': 'line',
+                                'quantity': 2,
+                                'unit': self.uom,
+                                'unit_price': 200,
+                                'description': 'Test description1',
+                                'product': self.product.id,
+                            }])
+                        ]}])
+                    sale2, = Sale.create([{
+                        'reference': 'Sale2',
+                        'sale_date': date.today(),
+                        'invoice_address': party.addresses[0].id,
+                        'shipment_address': party.addresses[0].id,
+                        'state': 'done',  # For testing purpose.
+                        'party': party.id,
+                        'lines': [
+                            ('create', [{
+                                'type': 'line',
+                                'quantity': 2,
+                                'unit': self.uom,
+                                'unit_price': 200,
+                                'description': 'Test description1',
+                                'product': self.product.id,
+                            }])
+                        ]}])
+                    sale3, = Sale.create([{
+                        'reference': 'Sale3',
+                        'sale_date': date.today(),
+                        'invoice_address': party.addresses[0].id,
+                        'shipment_address': party.addresses[0].id,
+                        'party': party.id,
+                        'sale_date': '2014-06-06',  # For testing purpose.
+                        'lines': [
+                            ('create', [{
+                                'type': 'line',
+                                'quantity': 2,
+                                'unit': self.uom,
+                                'unit_price': 200,
+                                'description': 'Test description1',
+                                'product': self.product.id,
+                            }])
+                        ]}])
+
+                Sale.quote([sale1])
+                Sale.confirm([sale1])
+
+                rv = c.get('/orders?filter_by=recent')
+                self.assertIn('recent', rv.data)
+                self.assertIn('#{0}'.format(sale1.id), rv.data)
+                self.assertIn('#{0}'.format(sale2.id), rv.data)
+                self.assertNotIn('#{0}'.format(sale3.id), rv.data)
+
+                rv = c.get('/orders?filter_by=done')
+                self.assertIn('done', rv.data)
+                self.assertIn('#{0}'.format(sale2.id), rv.data)
+                self.assertNotIn('#{0}'.format(sale1.id), rv.data)
+                self.assertNotIn('#{0}'.format(sale3.id), rv.data)
+
+                Sale.cancel([sale3])
+
+                rv = c.get('/orders?filter_by=canceled')
+                self.assertIn('cancel', rv.data)
+                self.assertIn('#{0}'.format(sale3.id), rv.data)
+                self.assertNotIn('#{0}'.format(sale1.id), rv.data)
+                self.assertNotIn('#{0}'.format(sale2.id), rv.data)
+
+                rv = c.get('/orders?filter_by=archived')
+                self.assertIn('archived', rv.data)
+                self.assertIn('#{0}'.format(sale3.id), rv.data)
+                self.assertNotIn('#{0}'.format(sale1.id), rv.data)
+                self.assertNotIn('#{0}'.format(sale2.id), rv.data)
 
 
 def suite():
