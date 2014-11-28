@@ -336,3 +336,12 @@ class Sale:
 
             flash(_('Comment Added'))
         return redirect(request.referrer)
+
+    def _get_amount_to_checkout(self):
+        """
+        Returns the amount which needs to be paid
+
+        Downstream modules can override this method to change it as
+        per their requirement
+        """
+        return self.amount_to_receive
