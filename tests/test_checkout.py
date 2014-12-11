@@ -449,7 +449,7 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
                 )
                 self.assertEqual(rv.status_code, 302)
                 self.assertTrue(
-                    rv.location.endswith('/checkout/delivery-method')
+                    rv.location.endswith('/checkout/validate-address')
                 )
 
                 # Assert that just one address was created
@@ -483,7 +483,7 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
                 )
                 self.assertEqual(rv.status_code, 302)
                 self.assertTrue(
-                    rv.location.endswith('/checkout/delivery-method')
+                    rv.location.endswith('/checkout/validate-address')
                 )
                 # Assert that the same address was updated and a new one
                 # was not created
@@ -585,7 +585,7 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
                 )
                 self.assertEqual(rv.status_code, 302)
                 self.assertTrue(
-                    rv.location.endswith('/checkout/delivery-method')
+                    rv.location.endswith('/checkout/validate-address')
                 )
 
                 # Assert that just one address was created
@@ -622,7 +622,7 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
                 )
                 self.assertEqual(rv.status_code, 302)
                 self.assertTrue(
-                    rv.location.endswith('/checkout/delivery-method')
+                    rv.location.endswith('/checkout/validate-address')
                 )
                 # Assert that the address was created as another one
                 addresses = Address.search([
@@ -698,7 +698,7 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
                 )
                 self.assertEqual(rv.status_code, 302)
                 self.assertTrue(
-                    rv.location.endswith('/checkout/delivery-method')
+                    rv.location.endswith('/checkout/validate-address')
                 )
                 sales = Sale.search([
                     ('shipment_address', '=', addresses[0].id)]
@@ -712,7 +712,7 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
                 )
                 self.assertEqual(rv.status_code, 302)
                 self.assertTrue(
-                    rv.location.endswith('/checkout/delivery-method')
+                    rv.location.endswith('/checkout/validate-address')
                 )
                 sales = Sale.search([
                     ('shipment_address', '=', addresses[1].id)]
