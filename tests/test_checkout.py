@@ -2067,11 +2067,6 @@ class TestCheckoutPayment(BaseTestCheckout):
             self.party2, = self.Party.create([{
                 'name': 'Registered User',
             }])
-            self.Party.write(
-                [self.registered_user.party], {
-                    'authorize_profile_id': '28545177',
-                }
-            )
             with app.test_client() as c:
                 self.login(c, 'email@example.com', 'password')
 
@@ -2105,6 +2100,7 @@ class TestCheckoutPayment(BaseTestCheckout):
                     'party': current_user.party.id,
                     'provider_reference': '26037832',
                     'gateway': gateway.id,
+                    'authorize_profile_id': '28545177',
                 }])
                 self.assertEqual(
                     len(current_user.party.payment_profiles), 1
@@ -2154,11 +2150,6 @@ class TestCheckoutPayment(BaseTestCheckout):
             self.party2, = self.Party.create([{
                 'name': 'Registered User',
             }])
-            self.Party.write(
-                [self.registered_user.party], {
-                    'authorize_profile_id': '28545177',
-                }
-            )
             with app.test_client() as c:
                 self.login(c, 'email@example.com', 'password')
                 address, = Address.create([{
@@ -2191,6 +2182,7 @@ class TestCheckoutPayment(BaseTestCheckout):
                     'party': current_user.party.id,
                     'provider_reference': '26037832',
                     'gateway': gateway.id,
+                    'authorize_profile_id': '28545177',
                 }])
                 self.assertEqual(
                     len(current_user.party.payment_profiles), 1
