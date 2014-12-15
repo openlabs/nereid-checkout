@@ -449,7 +449,7 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
                 )
                 self.assertEqual(rv.status_code, 302)
                 self.assertTrue(
-                    rv.location.endswith('/checkout/delivery-method')
+                    rv.location.endswith('/checkout/validate-address')
                 )
 
                 # Assert that just one address was created
@@ -483,7 +483,7 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
                 )
                 self.assertEqual(rv.status_code, 302)
                 self.assertTrue(
-                    rv.location.endswith('/checkout/delivery-method')
+                    rv.location.endswith('/checkout/validate-address')
                 )
                 # Assert that the same address was updated and a new one
                 # was not created
@@ -585,7 +585,7 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
                 )
                 self.assertEqual(rv.status_code, 302)
                 self.assertTrue(
-                    rv.location.endswith('/checkout/delivery-method')
+                    rv.location.endswith('/checkout/validate-address')
                 )
 
                 # Assert that just one address was created
@@ -622,7 +622,7 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
                 )
                 self.assertEqual(rv.status_code, 302)
                 self.assertTrue(
-                    rv.location.endswith('/checkout/delivery-method')
+                    rv.location.endswith('/checkout/validate-address')
                 )
                 # Assert that the address was created as another one
                 addresses = Address.search([
@@ -698,7 +698,7 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
                 )
                 self.assertEqual(rv.status_code, 302)
                 self.assertTrue(
-                    rv.location.endswith('/checkout/delivery-method')
+                    rv.location.endswith('/checkout/validate-address')
                 )
                 sales = Sale.search([
                     ('shipment_address', '=', addresses[0].id)]
@@ -712,7 +712,7 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
                 )
                 self.assertEqual(rv.status_code, 302)
                 self.assertTrue(
-                    rv.location.endswith('/checkout/delivery-method')
+                    rv.location.endswith('/checkout/validate-address')
                 )
                 sales = Sale.search([
                     ('shipment_address', '=', addresses[1].id)]
@@ -2067,11 +2067,6 @@ class TestCheckoutPayment(BaseTestCheckout):
             self.party2, = self.Party.create([{
                 'name': 'Registered User',
             }])
-            self.Party.write(
-                [self.registered_user.party], {
-                    'authorize_profile_id': '28545177',
-                }
-            )
             with app.test_client() as c:
                 self.login(c, 'email@example.com', 'password')
 
@@ -2105,6 +2100,7 @@ class TestCheckoutPayment(BaseTestCheckout):
                     'party': current_user.party.id,
                     'provider_reference': '26037832',
                     'gateway': gateway.id,
+                    'authorize_profile_id': '28545177',
                 }])
                 self.assertEqual(
                     len(current_user.party.payment_profiles), 1
@@ -2154,11 +2150,6 @@ class TestCheckoutPayment(BaseTestCheckout):
             self.party2, = self.Party.create([{
                 'name': 'Registered User',
             }])
-            self.Party.write(
-                [self.registered_user.party], {
-                    'authorize_profile_id': '28545177',
-                }
-            )
             with app.test_client() as c:
                 self.login(c, 'email@example.com', 'password')
                 address, = Address.create([{
@@ -2191,6 +2182,7 @@ class TestCheckoutPayment(BaseTestCheckout):
                     'party': current_user.party.id,
                     'provider_reference': '26037832',
                     'gateway': gateway.id,
+                    'authorize_profile_id': '28545177',
                 }])
                 self.assertEqual(
                     len(current_user.party.payment_profiles), 1
