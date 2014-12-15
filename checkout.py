@@ -452,7 +452,7 @@ class Checkout(ModelView):
                 cart.sale.save()
 
                 return redirect(
-                    url_for('nereid.checkout.delivery_method')
+                    url_for('nereid.checkout.validate_address')
                 )
 
         addresses = []
@@ -487,6 +487,28 @@ class Checkout(ModelView):
 
         # TODO: Not implemented yet
         return redirect(url_for('nereid.checkout.payment_method'))
+
+    @classmethod
+    @route('/checkout/validate-address', methods=['GET', 'POST'])
+    @not_empty_cart
+    @sale_has_non_guest_party
+    def validate_address(cls):
+        '''
+        Validation of shipping address (optional)
+
+        Shipping address can be validated and address suggestions could be shown
+        to the user. Here user can chooose address from suggestion and update
+        the saved address on `POST`
+        '''
+        NereidCart = Pool().get('nereid.cart')
+
+        cart = NereidCart.open_cart()
+
+        if not cart.sale.shipment_address:
+            return redirect(url_for('nereid.checkout.shipping_address'))
+
+        # TODO: Not implemented yet
+        return redirect(url_for('nereid.checkout.delivery_method'))
 
     @classmethod
     @route('/checkout/billing-address', methods=['GET', 'POST'])
