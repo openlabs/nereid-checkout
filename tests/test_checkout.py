@@ -3,7 +3,7 @@
 
     nereid_checkout test suite
 
-    :copyright: (c) 2010-2013 by Openlabs Technologies & Consulting (P) Ltd.
+    :copyright: (c) 2010-2014 by Openlabs Technologies & Consulting (P) Ltd.
     :license: GPLv3, see LICENSE for more details
 '''
 import unittest
@@ -16,18 +16,13 @@ from datetime import date
 
 import trytond.tests.test_tryton
 from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
-from trytond.config import CONFIG
+from trytond.config import config
 from trytond.transaction import Transaction
 from nereid import current_user
 
 from trytond.modules.nereid_cart_b2c.tests.test_product import BaseTestCase
 
-CONFIG['smtp_server'] = 'smtpserver'
-CONFIG['smtp_user'] = 'test@xyz.com'
-CONFIG['smtp_password'] = 'testpassword'
-CONFIG['smtp_port'] = 587
-CONFIG['smtp_tls'] = True
-CONFIG['smtp_from'] = 'from@xyz.com'
+config.set('email', 'from', 'from@xyz.com')
 
 
 class BaseTestCheckout(BaseTestCase):
@@ -72,13 +67,13 @@ class BaseTestCheckout(BaseTestCase):
         Address = POOL.get('party.address')
 
         # Add emails to party
-        self.Party.write([
-            self.registered_user.party, self.registered_user2.party
-        ], {
+        self.Party.write([self.registered_user.party], {
             'contact_mechanisms': [('create', [
                 {'type': 'email', 'value': 'test@ol.in'},
             ])],
-        }, {
+        })
+
+        self.Party.write([self.registered_user2.party], {
             'contact_mechanisms': [('create', [
                 {'type': 'email', 'value': 'test2@ol.in'},
             ])],

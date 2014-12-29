@@ -4,7 +4,7 @@
 
     Payment Gateway Setup
 
-    :copyright: (c) 2013-2014 by Openlabs Technologies & Consulting (P) Ltd.
+    :copyright: (c) 2013-2015 by Openlabs Technologies & Consulting (P) Ltd.
     :license: BSD, see LICENSE for more details
 
 '''
@@ -38,8 +38,7 @@ class SQLiteTest(Command):
         if self.distribution.tests_require:
             self.distribution.fetch_build_eggs(self.distribution.tests_require)
 
-        from trytond.config import CONFIG
-        CONFIG['db_type'] = 'sqlite'
+        os.environ['TRYTOND_DATABASE_URI'] = 'sqlite://'
         os.environ['DB_NAME'] = ':memory:'
 
         from tests import suite
@@ -97,10 +96,11 @@ setup(
         'trytond.modules.%s.tests' % MODULE,
     ],
     package_data={
-        'trytond.modules.%s' % MODULE: info.get('xml', [])
-        + info.get('translation', [])
-        + ['tryton.cfg', 'locale/*.po', 'tests/*.rst', '*.odt']
-        + ['view/*.xml'],
+        'trytond.modules.%s' % MODULE:
+            info.get('xml', []) +
+            info.get('translation', []) +
+            ['tryton.cfg', 'locale/*.po', 'tests/*.rst', '*.odt'] +
+            ['view/*.xml'],
     },
     classifiers=[
         'Development Status :: 4 - Beta',

@@ -577,8 +577,11 @@ class Checkout(ModelView):
                 if not address_form.validate():
                     address = None
                 else:
-                    if current_user.is_anonymous() and cart.sale.invoice_address \
-                        and cart.sale.invoice_address != cart.sale.shipment_address:    # noqa
+                    if (
+                        current_user.is_anonymous() and
+                        cart.sale.invoice_address and
+                        cart.sale.invoice_address != cart.sale.shipment_address
+                    ):
                         # Save to the same address if the guest user
                         # is just trying to update the address
                         address = cart.sale.invoice_address
