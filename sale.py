@@ -37,7 +37,6 @@ class Sale:
     #: to optionally display the order to an user who has not authenticated
     #: as yet
     guest_access_code = fields.Char('Guest Access Code')
-    email_sent = fields.Boolean('Email Sent?', readonly="True")
 
     per_page = 10
 
@@ -130,7 +129,7 @@ class Sale:
             'sale.jinja', sale=self, confirmation=confirmation
         )
 
-    def send_confirmation_email(self, silent=True):
+    def send_confirmation_email(self):
         """An email confirming that the order has been confirmed and that we
         are waiting for the payment confirmation if we are really waiting for
         it.
@@ -145,33 +144,22 @@ class Sale:
         EmailQueue = Pool().get('email.queue')
         ModelData = Pool().get('ir.model.data')
         Group = Pool().get('res.group')
-        Sale = Pool().get('sale.sale')
 
-        # TODO: Instead of 2 emails, merge them into one
+        if not has_request_context():
+            return super(Sale, self).send_confirmation_email()
+
+        if self.email_sent:
+            return
+
         group_id = ModelData.get_id(
-            "nereid_checkout", "order_confirmation_receivers"
+            "sale_confirmation_email", "order_confirmation_receivers"
         )
-        to_emails = map(
+        bcc_emails = map(
             lambda user: user.email,
             filter(lambda user: user.email, Group(group_id).users)
         )
 
-        if to_emails:
-            # Send the order confirmation notification email
-            subject = "New order has been placed: #%s" % self.reference
-            email_message = render_email(
-                CONFIG['smtp_from'], to_emails, subject,
-                text_template='emails/sale-confirmation-text.jinja',
-                html_template='emails/sale-confirmation-html.jinja',
-                sale=self,
-                formatLang=lambda *args, **kargs: Report.format_lang(
-                    *args, **kargs)
-            )
-            EmailQueue.queue_mail(
-                CONFIG['smtp_from'], to_emails, email_message.as_string()
-            )
-
-        # Send the standard order confirmation email
+        subject = self._get_subject_for_email()
         to_emails = set()
         if self.party.email:
             to_emails.add(self.party.email.lower())
@@ -179,7 +167,7 @@ class Sale:
             to_emails.add(current_user.email.lower())
         if to_emails:
             email_message = render_email(
-                CONFIG['smtp_from'], list(to_emails), 'Order Confirmed',
+                CONFIG['smtp_from'], list(to_emails), subject,
                 text_template='emails/sale-confirmation-text.jinja',
                 html_template='emails/sale-confirmation-html.jinja',
                 sale=self,
@@ -188,13 +176,12 @@ class Sale:
             )
 
             EmailQueue.queue_mail(
-                CONFIG['smtp_from'], list(to_emails),
+                CONFIG['smtp_from'], list(to_emails) + bcc_emails,
                 email_message.as_string()
             )
 
-            Sale.write([self], {
-                'email_sent': True,
-            })
+            self.email_sent = True
+            self.save()
 
     @classmethod
     def confirm(cls, sales):
@@ -208,9 +195,6 @@ class Sale:
                 if current_user.is_anonymous():
                     sale.party.name = sale.invoice_address.name
                     sale.party.save()
-                if sale.email_sent:
-                    continue
-                sale.send_confirmation_email()
 
     def nereid_pay_using_credit_card(self, credit_card_form, amount):
         '''
