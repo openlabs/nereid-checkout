@@ -1,0 +1,127 @@
+# 
+msgid ""
+msgstr "Content-Type: text/plain; charset=utf-8\n"
+
+msgctxt "field:nereid.checkout,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.website,accept_credit_card:"
+msgid "Accept Credit Card"
+msgstr "Kreditkarte akzeptieren"
+
+msgctxt "field:nereid.website,alternate_payment_methods:"
+msgid "Alternate Payment Methods"
+msgstr "Alternative Zahlungsmethoden"
+
+msgctxt "field:nereid.website,credit_card_gateway:"
+msgid "Credit Card Gateway"
+msgstr "Kreditkartengateway"
+
+msgctxt "field:nereid.website,save_payment_profile:"
+msgid "Allow Saving Payment Profiles"
+msgstr "Speicherung von Zahlungsprofilen erlauben"
+
+msgctxt "field:nereid.website.payment_method,create_date:"
+msgid "Create Date"
+msgstr "Erstellungsdatum"
+
+msgctxt "field:nereid.website.payment_method,create_uid:"
+msgid "Create User"
+msgstr "Erstellt durch"
+
+msgctxt "field:nereid.website.payment_method,gateway:"
+msgid "Gateway"
+msgstr "Gateway"
+
+msgctxt "field:nereid.website.payment_method,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.website.payment_method,instructions:"
+msgid "Instructions"
+msgstr "Instruktionen"
+
+msgctxt "field:nereid.website.payment_method,method:"
+msgid "Payment Gateway Method"
+msgstr "Zahlungsgatewaymethode"
+
+msgctxt "field:nereid.website.payment_method,name:"
+msgid "Name"
+msgstr "Name"
+
+msgctxt "field:nereid.website.payment_method,provider:"
+msgid "Provider"
+msgstr "Provider"
+
+msgctxt "field:nereid.website.payment_method,rec_name:"
+msgid "Name"
+msgstr "Name"
+
+msgctxt "field:nereid.website.payment_method,sequence:"
+msgid "Sequence"
+msgstr "Reihenfolge"
+
+msgctxt "field:nereid.website.payment_method,website:"
+msgid "Website"
+msgstr "Website"
+
+msgctxt "field:nereid.website.payment_method,write_date:"
+msgid "Write Date"
+msgstr "Zuletzt geändert"
+
+msgctxt "field:nereid.website.payment_method,write_uid:"
+msgid "Write User"
+msgstr "Letzte Änderung durch"
+
+msgctxt "field:party.address,phone_number:"
+msgid "Phone"
+msgstr "Telefon"
+
+msgctxt "field:party.party,nereid_session:"
+msgid "Nereid Session"
+msgstr "Nereid Sitzung"
+
+msgctxt "field:sale.sale,email_sent:"
+msgid "Email Sent?"
+msgstr "E-Mail gesendet"
+
+msgctxt "field:sale.sale,guest_access_code:"
+msgid "Guest Access Code"
+msgstr "Gast-Zugangscode"
+
+msgctxt "model:ir.action,name:act_payment_method_form"
+msgid "Payment Methods"
+msgstr "Zahlungsmethoden"
+
+msgctxt "model:nereid.checkout,name:"
+msgid "A checkout model"
+msgstr "Checkout Modell"
+
+msgctxt "model:nereid.website.payment_method,name:"
+msgid "Alternate payment gateway mechanisms"
+msgstr "Alternative Zahlunsgatewaymechanismen"
+
+msgctxt "model:res.group,name:order_confirmation_receivers"
+msgid "Order Confirmation BCC receivers"
+msgstr "Bestellbestätigung BCC-Empfänger"
+
+msgctxt "nereid:sale.py:"
+msgid "Comment Added"
+msgstr "Kommentar hinzugefügt"
+
+msgctxt "view:nereid.website.payment_method:"
+msgid "Instructions"
+msgstr "Anweisungen"
+
+msgctxt "view:nereid.website.payment_method:"
+msgid "Payment Method"
+msgstr "Zahlungsmethode"
+
+msgctxt "view:nereid.website.payment_method:"
+msgid "Payment Methods"
+msgstr "Zahlungsmethoden"
+
+msgctxt "view:nereid.website:"
+msgid "Alternative Payment Methods"
+msgstr "Alternative Zahlungsmethoden"
