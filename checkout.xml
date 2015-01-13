@@ -69,9 +69,5 @@
             <field name="name">address_form</field>
         </record>
 
-        <record id="order_confirmation_receivers" model="res.group">
-            <field name="name">Order Confirmation BCC receivers</field>
-        </record>
-
     </data>
 </tryton>
