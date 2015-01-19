@@ -12,16 +12,13 @@ from datetime import date
 from dateutil.relativedelta import relativedelta
 
 from trytond.model import fields
-from trytond.config import CONFIG
 from trytond.pool import PoolMeta, Pool
 
 from nereid import render_template, request, abort, login_required, \
     route, current_user, flash, redirect, url_for, jsonify
 from nereid.contrib.pagination import Pagination
-from nereid.templating import render_email
 from nereid.ctx import has_request_context
 from trytond.transaction import Transaction
-from trytond.report import Report
 
 from .i18n import _
 
@@ -128,60 +125,6 @@ class Sale:
         return render_template(
             'sale.jinja', sale=self, confirmation=confirmation
         )
-
-    def send_confirmation_email(self):
-        """An email confirming that the order has been confirmed and that we
-        are waiting for the payment confirmation if we are really waiting for
-        it.
-
-        For setting a convention this email has to be sent by rendering the
-        templates
-
-           * Text: `emails/sale-confirmation-text.jinja`
-           * HTML: `emails/sale-confirmation-html.jinja`
-
-        """
-        EmailQueue = Pool().get('email.queue')
-        ModelData = Pool().get('ir.model.data')
-        Group = Pool().get('res.group')
-
-        if not has_request_context():
-            return super(Sale, self).send_confirmation_email()
-
-        if self.email_sent:
-            return
-
-        group_id = ModelData.get_id(
-            "sale_confirmation_email", "order_confirmation_receivers"
-        )
-        bcc_emails = map(
-            lambda user: user.email,
-            filter(lambda user: user.email, Group(group_id).users)
-        )
-
-        subject = self._get_subject_for_email()
-        to_emails = set()
-        if self.party.email:
-            to_emails.add(self.party.email.lower())
-        if not current_user.is_anonymous() and current_user.email:
-            to_emails.add(current_user.email.lower())
-        if to_emails:
-            email_message = render_email(
-                CONFIG['smtp_from'], list(to_emails), subject,
-                text_template='emails/sale-confirmation-text.jinja',
-                html_template='emails/sale-confirmation-html.jinja',
-                sale=self,
-                formatLang=lambda *args, **kargs: Report.format_lang(
-                    *args, **kargs)
-            )
-
-            EmailQueue.queue_mail(
-                CONFIG['smtp_from'], list(to_emails) + bcc_emails,
-                email_message.as_string()
-            )
-
-            self.email_sent = True
-            self.save()
 
     @classmethod
     def confirm(cls, sales):
@@ -335,3 +278,36 @@ class Sale:
         per their requirement
         """
         return self.amount_to_receive
+
+    def _get_email_template_context(self):
+        """
+        Update context
+        """
+        context = super(Sale, self)._get_email_template_context()
+
+        if has_request_context() and not current_user.is_anonymous():
+            customer_name = current_user.display_name
+        else:
+            customer_name = self.party.name
+
+        context.update({
+            'url_for': lambda *args, **kargs: url_for(*args, **kargs),
+            'has_request_context': lambda *args, **kargs: has_request_context(
+                *args, **kargs),
+            'current_user': current_user,
+            'customer_name': customer_name
+        })
+        return context
+
+    def _get_receiver_email_address(self):
+        """
+        Update reciever's email address(s)
+        """
+        to_emails = set()
+        if self.party.email:
+            to_emails.add(self.party.email.lower())
+        if has_request_context() and not current_user.is_anonymous() and \
+                current_user.email:
+            to_emails.add(current_user.email.lower())
+
+        return list(to_emails)
