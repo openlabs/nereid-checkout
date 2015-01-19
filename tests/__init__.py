@@ -11,7 +11,7 @@ import unittest
 import trytond.tests.test_tryton
 from test_checkout import TestCheckoutSignIn, TestCheckoutShippingAddress, \
     TestCheckoutDeliveryMethod, TestCheckoutBillingAddress, \
-    TestCheckoutPayment
+    TestCheckoutPayment, TestSale
 from test_address import TestAddress
 
 
@@ -28,6 +28,7 @@ def suite():
         loader.loadTestsFromTestCase(TestCheckoutBillingAddress),
         loader.loadTestsFromTestCase(TestCheckoutPayment),
         loader.loadTestsFromTestCase(TestAddress),
+        loader.loadTestsFromTestCase(TestSale)
     ])
     return test_suite
 
