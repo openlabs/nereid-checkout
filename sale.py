@@ -381,7 +381,7 @@ class SaleLine:
                     'product.product.render',
                     uri=self.product.uri,
                     _external=True
-                )
+                ) if self.product.uri else None
             },
             "price": str(self.amount),
             "priceCurrency": self.sale.currency.code,
