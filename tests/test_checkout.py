@@ -127,7 +127,8 @@ class BaseTestCheckout(BaseTestCase):
             'account_revenue': account_revenue.id,
             'products': [
                 ('create', [{
-                    'code': 'Test Product'
+                    'code': 'Test Product',
+                    'uri': 'test-product'
                 }])
             ]
         }])
@@ -2451,6 +2452,48 @@ class TestCheckoutPayment(BaseTestCheckout):
                 self.assertNotIn('#{0}'.format(sale2.id), rv.data)
 
 
+class TestSale(BaseTestCheckout):
+    """
+    Test Sale
+    """
+
+    def test_0010_test_sale_json_ld(self):
+        """
+        Test the generation of json-ld for sale and sale line
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            Sale = POOL.get('sale.sale')
+
+            party = self.registered_user.party
+
+            with app.test_client() as c:
+                self.login(c, 'email@example.com', 'password')
+
+                with Transaction().set_context(company=self.company.id):
+                    sale, = Sale.create([{
+                        'reference': 'Sale1',
+                        'sale_date': date.today(),
+                        'invoice_address': party.addresses[0].id,
+                        'shipment_address': party.addresses[0].id,
+                        'party': party.id,
+                        'lines': [
+                            ('create', [{
+                                'type': 'line',
+                                'quantity': 2,
+                                'unit': self.uom,
+                                'unit_price': 200,
+                                'description': 'Test description1',
+                                'product': self.product.id,
+                            }])
+                        ]}])
+
+                    # Test if json-ld is successfully generated for Sale
+                    self.assert_(sale.as_json_ld())
+
+
 def suite():
     "Checkout test suite"
     "Define suite"
@@ -2462,6 +2505,7 @@ def suite():
         loader.loadTestsFromTestCase(TestCheckoutDeliveryMethod),
         loader.loadTestsFromTestCase(TestCheckoutBillingAddress),
         loader.loadTestsFromTestCase(TestCheckoutPayment),
+        loader.loadTestsFromTestCase(TestSale),
     )
     return test_suite
 
