@@ -4,11 +4,12 @@
 
     Additional Changes to sale
 
-    :copyright: (c) 2011-2014 by Openlabs Technologies & Consulting (P) Limited
+    :copyright: (c) 2011-2015 by Openlabs Technologies & Consulting (P) Limited
     :license: GPLv3, see LICENSE for more details.
 """
+import json
 from uuid import uuid4
-from datetime import date
+from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 
 from trytond.model import fields
@@ -22,7 +23,7 @@ from trytond.transaction import Transaction
 
 from .i18n import _
 
-__all__ = ['Sale']
+__all__ = ['Sale', 'SaleLine']
 __metaclass__ = PoolMeta
 
 
@@ -295,7 +296,8 @@ class Sale:
             'has_request_context': lambda *args, **kargs: has_request_context(
                 *args, **kargs),
             'current_user': current_user,
-            'customer_name': customer_name
+            'customer_name': customer_name,
+            'to_json': lambda *args, **kargs: json.dumps(*args, **kargs),
         })
         return context
 
@@ -311,3 +313,80 @@ class Sale:
             to_emails.add(current_user.email.lower())
 
         return list(to_emails)
+
+    def as_json_ld(self):
+        """
+        Gmail markup for order information
+
+        https://developers.google.com/gmail/markup/reference/order
+        """
+        data = {
+            "@context": "http://schema.org",
+            "@type": "Order",
+            "customer": {
+                "@type": "Person",
+                "name": self.party.name,
+            },
+            "merchant": {
+                "@type": "Organization",
+                "name": self.company.rec_name
+            },
+            "orderNumber": self.reference,
+            "orderDate": str(
+                datetime.combine(self.sale_date, datetime.min.time())
+            ),
+            "orderStatus": "http://schema.org/OrderStatus/OrderProcessing",
+            "priceCurrency": self.currency.code,
+            "price": str(self.total_amount),
+            "acceptedOffer": [],
+            "url": url_for(
+                'sale.sale.render', active_id=self.id,
+                access_code=self.guest_access_code, _external=True
+            )
+        }
+
+        for line in self.lines:
+            if not line.type == 'line' and not line.product:
+                continue
+            data["acceptedOffer"].append(line.as_json_ld())
+
+        if self.invoice_address:
+            data["billingAddress"] = {
+                "@type": "PostalAddress",
+                "name": self.invoice_address.name or self.party.name,
+                "streetAddress": self.invoice_address.street,
+                "addressLocality": self.invoice_address.city,
+                "addressRegion": self.invoice_address.subdivision and self.invoice_address.subdivision.rec_name,  # noqa
+                "addressCountry": self.invoice_address.country and self.invoice_address.country.rec_name  # noqa
+            }
+        return data
+
+
+class SaleLine:
+    __name__ = 'sale.line'
+
+    def as_json_ld(self):
+        """
+        Gmail markup for order line information
+
+        https://developers.google.com/gmail/markup/reference/order
+        """
+        return {
+            "@type": "Offer",
+            "itemOffered": {
+                "@type": "Product",
+                "name": self.product.name,
+                "sku": self.product.code,
+                "url": url_for(
+                    'product.product.render',
+                    uri=self.product.uri,
+                    _external=True
+                )
+            },
+            "price": str(self.amount),
+            "priceCurrency": self.sale.currency.code,
+            "eligibleQuantity": {
+                "@type": "QuantitativeValue",
+                "value": self.quantity,
+            }
+        }
