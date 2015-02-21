@@ -39,6 +39,14 @@ class Sale:
     per_page = 10
 
     @staticmethod
+    def default_payment_authorize_on():
+        return 'manual'
+
+    @staticmethod
+    def default_payment_capture_on():
+        return 'sale_process'
+
+    @staticmethod
     def default_guest_access_code():
         """A guest access code must be written to the guest_access_code of the
         sale order so that it could be accessed without a login
@@ -140,98 +148,86 @@ class Sale:
                     sale.party.name = sale.invoice_address.name
                     sale.party.save()
 
-    def nereid_pay_using_credit_card(self, credit_card_form, amount):
-        '''
-        Complete using the given card.
-
-        If the user is registered and the save card option is given, then
-        first save the card and delegate to :meth:`_complete_using_profile`
-        with the profile thus obtained.
-
-        Otherwise a payment transaction is created with the given card data.
-        '''
-        AddPaymentProfileWizard = Pool().get(
-            'party.party.payment_profile.add', type='wizard'
-        )
-
-        gateway = request.nereid_website.credit_card_gateway
-
+    def validate_payment_profile(self, payment_profile):
+        """
+        Checks if payment profile belongs to right party
+        """
         if not current_user.is_anonymous() and \
-                credit_card_form.add_card_to_profiles.data and \
-                request.nereid_website.save_payment_profile:
-            profile_wiz = AddPaymentProfileWizard(
-                AddPaymentProfileWizard.create()[0]     # Wizard session
-            )
-
-            profile_wiz.card_info.party = self.party
-            profile_wiz.card_info.address = self.invoice_address
-            profile_wiz.card_info.provider = gateway.provider
-            profile_wiz.card_info.gateway = gateway
-            profile_wiz.card_info.owner = credit_card_form.owner.data
-            profile_wiz.card_info.number = credit_card_form.number.data
-            profile_wiz.card_info.expiry_month = \
-                credit_card_form.expiry_month.data
-            profile_wiz.card_info.expiry_year = \
-                unicode(credit_card_form.expiry_year.data)
-            profile_wiz.card_info.csc = credit_card_form.cvv.data
-
-            with Transaction().set_context(return_profile=True):
-                profile = profile_wiz.transition_add()
-                return self.nereid_pay_using_profile(
-                    profile.id, amount
-                )
-
-        return self._pay_using_credit_card(
-            gateway, {
-                'owner': credit_card_form.owner.data,
-                'number': credit_card_form.number.data,
-                'expiry_month': credit_card_form.expiry_month.data,
-                'expiry_year': unicode(credit_card_form.expiry_year.data),
-                'cvv': credit_card_form.cvv.data,
-            },
-            amount
-        )
-
-    def nereid_pay_using_alternate_payment_method(self, payment_form, amount):
-        '''
-        :param payment_form: The validated payment_form to extract additional
-                             info
-        '''
-        PaymentTransaction = Pool().get('payment_gateway.transaction')
-        PaymentMethod = Pool().get('nereid.website.payment_method')
-
-        payment_method = PaymentMethod(
-            payment_form.alternate_payment_method.data
-        )
-
-        payment_transaction = PaymentTransaction(
-            party=self.party,
-            address=self.invoice_address,
-            amount=amount,
-            currency=self.currency,
-            gateway=payment_method.gateway,
-            sale=self,
-        )
-        payment_transaction.save()
-
-        return payment_method.process(payment_transaction)
-
-    def nereid_pay_using_profile(self, payment_profile_id, amount):
-        """
-        Pay the amount using the given profile. Ensures that the profile
-        belongs to the current user.
-        """
-        PaymentProfile = Pool().get('party.payment_profile')
-
-        payment_profile = PaymentProfile(payment_profile_id)
-        if payment_profile.party != current_user.party:
+                payment_profile.party != current_user.party:
             # verify that the payment profile belongs to the registered
             # user.
             flash(_('The payment profile chosen is invalid'))
             return redirect(
                 url_for('nereid.checkout.payment_method')
             )
-        return self._pay_using_profile(payment_profile, amount)
+
+    def _add_sale_payment(
+        self, credit_card_form=None, payment_profile=None,
+        alternate_payment_method=None
+    ):
+        """
+        Add sale payment against sale with given credit card or payment profile
+        or any other alternate payment method.
+
+        Payments are processed then using these sale payments.
+
+        All payment profiles are saved as of now.
+        """
+
+        AddSalePaymentWizard = Pool().get(
+            'sale.payment.add', type="wizard"
+        )
+
+        payment_wizard = AddSalePaymentWizard(
+            AddSalePaymentWizard.create()[0]
+        )
+
+        if request.nereid_website.credit_card_gateway and (
+            payment_profile or credit_card_form
+        ):
+            gateway = request.nereid_website.credit_card_gateway
+
+            if payment_profile:
+                self.validate_payment_profile(payment_profile)
+
+                payment_wizard.payment_info.use_existing_card = True
+                payment_wizard.payment_info.payment_profile = payment_profile.id
+
+            elif credit_card_form:
+
+                # TODO: Do not allow saving payment profile for guest user.
+                # This can introduce an issue when guest user
+                # checkouts multiple times with the same card
+
+                payment_wizard.payment_info.use_existing_card = False
+                payment_wizard.payment_info.payment_profile = None
+                payment_wizard.payment_info.address = self.invoice_address
+                payment_wizard.payment_info.owner = credit_card_form.owner.data
+                payment_wizard.payment_info.number = \
+                    credit_card_form.number.data
+                payment_wizard.payment_info.expiry_month = \
+                    credit_card_form.expiry_month.data
+                payment_wizard.payment_info.expiry_year = \
+                    unicode(credit_card_form.expiry_year.data)
+                payment_wizard.payment_info.csc = credit_card_form.cvv.data
+
+        elif alternate_payment_method:
+            gateway = alternate_payment_method.gateway
+            payment_wizard.payment_info.use_existing_card = False
+            payment_wizard.payment_info.payment_profile = None
+
+        payment_wizard.payment_info.sale = self.id
+        payment_wizard.payment_info.party = self.party.id
+        payment_wizard.payment_info.currency_digits = self.currency_digits
+        payment_wizard.payment_info.amount = self._get_amount_to_checkout()
+        payment_wizard.payment_info.reference = self.reference
+
+        payment_wizard.payment_info.method = gateway.method
+        payment_wizard.payment_info.provider = gateway.provider
+        payment_wizard.payment_info.gateway = gateway
+
+        with Transaction().set_context(active_id=self.id):
+            payment_wizard.transition_add()
 
     @route('/order/<int:active_id>/add-comment', methods=['POST'])
     def add_comment_to_sale(self):
@@ -278,7 +274,7 @@ class Sale:
         Downstream modules can override this method to change it as
         per their requirement
         """
-        return self.amount_to_receive
+        return self.total_amount - self.payment_total
 
     def _get_email_template_context(self):
         """

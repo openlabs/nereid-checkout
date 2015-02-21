@@ -4,7 +4,7 @@
 
     Nereid Checkout register and default checkout
 
-    :copyright: (c) 2010-2014 by Openlabs Technologies & Consulting (P) LTD.
+    :copyright: (c) 2010-2015 by Openlabs Technologies & Consulting (P) LTD.
     :license: GPLv3, see LICENSE for more details
 """
 import warnings
@@ -669,19 +669,20 @@ class Checkout(ModelView):
         behavior of processing payment independent of this module.
         """
         NereidCart = Pool().get('nereid.cart')
+        PaymentProfile = Pool().get('party.payment_profile')
+        PaymentMethod = Pool().get('nereid.website.payment_method')
 
         cart = NereidCart.open_cart()
         payment_form = cls.get_payment_form()
         credit_card_form = cls.get_credit_card_form()
 
-        amount_to_checkout = cart.sale._get_amount_to_checkout()
-
         if not current_user.is_anonymous() and \
                 payment_form.payment_profile.data:
             # Regd. user with payment_profile
-            rv = cart.sale.nereid_pay_using_profile(
-                payment_form.payment_profile.data,
-                amount_to_checkout
+            rv = cart.sale._add_sale_payment(
+                payment_profile=PaymentProfile(
+                    payment_form.payment_profile.data
+                )
             )
             if isinstance(rv, BaseResponse):
                 # Redirects only if payment profile is invalid.
@@ -691,9 +692,10 @@ class Checkout(ModelView):
 
         elif payment_form.alternate_payment_method.data:
             # Checkout using alternate payment method
-            rv = cart.sale.nereid_pay_using_alternate_payment_method(
-                payment_form,
-                amount_to_checkout
+            rv = cart.sale._add_sale_payment(
+                alternate_payment_method=PaymentMethod(
+                    payment_form.alternate_payment_method.data
+                )
             )
             if isinstance(rv, BaseResponse):
                 # If the alternate payment method introduced a
@@ -705,9 +707,8 @@ class Checkout(ModelView):
         elif request.nereid_website.credit_card_gateway and \
                 credit_card_form.validate():
             # validate the credit card form and checkout using that
-            cart.sale.nereid_pay_using_credit_card(
-                credit_card_form,
-                amount_to_checkout
+            cart.sale._add_sale_payment(
+                credit_card_form=credit_card_form
             )
             return cls.confirm_cart(cart)
 

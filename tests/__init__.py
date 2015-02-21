@@ -10,8 +10,8 @@
 import unittest
 import trytond.tests.test_tryton
 from test_checkout import TestCheckoutSignIn, TestCheckoutShippingAddress, \
-    TestCheckoutDeliveryMethod, TestCheckoutBillingAddress, \
-    TestCheckoutPayment, TestSale
+    TestCheckoutDeliveryMethod, TestCheckoutBillingAddress, TestSale
+from test_payment import TestCheckoutPayment
 from test_address import TestAddress
 
 
