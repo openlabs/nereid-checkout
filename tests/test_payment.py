@@ -1122,7 +1122,7 @@ class TestCheckoutPayment(BaseTestCheckout):
         """
         Accesses orders page for a registered user.
         """
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -1268,7 +1268,6 @@ class TestCheckoutPayment(BaseTestCheckout):
 
                 sale_payment, = sale.payments
                 self.assertEqual(sale_payment.method, auth_gateway.method)
-
 
                 self.assertEqual(sale.payment_total, Decimal('100'))
                 self.assertEqual(sale.payment_available, Decimal('100'))

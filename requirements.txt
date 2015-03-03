@@ -1,3 +1,5 @@
+psycopg2
+
 # Install zikzakmedia's sale shop module from bitbucket.
 # Depend on a commit as in further commit migration in sqlite is broken
 https://bitbucket.org/zikzakmedia/trytond-sale_shop/get/default.tar.gz

@@ -4,7 +4,7 @@
 
     Add the test suite here so that setup.py test loader picks it up
 
-    :copyright: © 2013 by Openlabs Technologies & Consulting (P) Limited
+    :copyright: © 2013-2015 by Openlabs Technologies & Consulting (P) Limited
     :license: GPLv3, see LICENSE for more details.
 """
 import unittest
@@ -22,12 +22,12 @@ def suite():
     test_suite = trytond.tests.test_tryton.suite()
     loader = unittest.TestLoader()
     test_suite.addTests([
+        loader.loadTestsFromTestCase(TestAddress),
         loader.loadTestsFromTestCase(TestCheckoutSignIn),
         loader.loadTestsFromTestCase(TestCheckoutShippingAddress),
         loader.loadTestsFromTestCase(TestCheckoutDeliveryMethod),
         loader.loadTestsFromTestCase(TestCheckoutBillingAddress),
         loader.loadTestsFromTestCase(TestCheckoutPayment),
-        loader.loadTestsFromTestCase(TestAddress),
         loader.loadTestsFromTestCase(TestSale)
     ])
     return test_suite

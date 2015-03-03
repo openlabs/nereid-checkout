@@ -17,6 +17,7 @@ from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
 from trytond.config import config
 from trytond.transaction import Transaction
 from nereid import current_user
+from trytond import backend
 
 from trytond.modules.nereid_cart_b2c.tests.test_product import BaseTestCase
 
@@ -25,6 +26,10 @@ config.set('email', 'from', 'from@xyz.com')
 
 class BaseTestCheckout(BaseTestCase):
     """Test Checkout Base"""
+
+    @classmethod
+    def setUpClass(cls):
+        print "====== Tests are running on %s ========" % backend.name()
 
     def setUp(self):
         super(BaseTestCheckout, self).setUp()
@@ -197,7 +202,7 @@ class TestCheckoutSignIn(BaseTestCheckout):
 
     def test_0020_guest_no_email(self):
         """Submit as guest without email"""
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
@@ -1450,7 +1455,7 @@ class TestSale(BaseTestCheckout):
         """
         Test the generation of json-ld for sale and sale line
         """
-        with Transaction().start(DB_NAME, USER, CONTEXT):
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 

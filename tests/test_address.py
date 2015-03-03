@@ -92,6 +92,8 @@ class TestAddress(NereidTestCase):
             'name': '%s' % date.year,
             'code': 'account.invoice',
             'company': company,
+            'prefix': 'ab',
+            'suffix': 'op',
         }])
         fiscal_year, = FiscalYear.create([{
             'name': '%s' % date.year,
