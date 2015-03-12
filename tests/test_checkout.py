@@ -767,6 +767,64 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
                 )
                 self.assertEqual(len(sales), 1)
 
+    def test_0070_guest_edits_shipping_address(self):
+        "Guest user wants to edit the shipping address while checkout"
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            Checkout = POOL.get('nereid.checkout')
+
+            country = self.Country(self.available_countries[0])
+            subdivision = country.subdivisions[0]
+
+            with app.test_client() as c:
+                c.post(
+                    '/cart/add', data={
+                        'product': self.product1.id, 'quantity': 5
+                    }
+                )
+
+                # Sign-in
+                rv = c.post(
+                    '/checkout/sign-in', data={
+                        'email': 'new@example.com',
+                        'checkout_mode': 'guest',
+                    }
+                )
+
+                address_data = {
+                    'name': 'Sharoon Thomas',
+                    'street': 'Biscayne Boulevard',
+                    'streetbis': 'Apt. 1906, Biscayne Park',
+                    'zip': 'FL33137',
+                    'city': 'Miami',
+                    'country': country.id,
+                    'subdivision': subdivision.id,
+                }
+                # Shipping address page gets rendered
+                rv = c.post(
+                    '/checkout/shipping-address',
+                    data=address_data
+                )
+                self.assertEqual(rv.status_code, 302)
+                self.assertTrue(
+                    rv.location.endswith('/checkout/validate-address')
+                )
+
+                rv = c.get('/checkout/shipping-address')
+                render_obj = Checkout.shipping_address()
+                self.assertTrue(render_obj)
+
+                self.assertTrue(render_obj.context['address_form'])
+                address_form = render_obj.context['address_form']
+                self.assertEqual(address_form.name.data, address_data['name'])
+                self.assertEqual(
+                    address_form.street.data, address_data['street'])
+                self.assertEqual(address_form.city.data, address_data['city'])
+                self.assertEqual(
+                    address_form.country.data, address_data['country'])
+
 
 class TestCheckoutDeliveryMethod(BaseTestCheckout):
     "Test the Delivery Method Step"
@@ -1320,6 +1378,74 @@ class TestCheckoutBillingAddress(BaseTestCheckout):
                     ('invoice_address', '=', addresses[0].id),
                 ])
                 self.assertEqual(len(sales), 1)
+
+    def test_0090_guest_edits_billing_address(self):
+        "Guest user wants to edit the billing address while checkout"
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            Checkout = POOL.get('nereid.checkout')
+
+            country = self.Country(self.available_countries[0])
+            subdivision = country.subdivisions[0]
+
+            with app.test_client() as c:
+                c.post(
+                    '/cart/add', data={
+                        'product': self.product1.id, 'quantity': 5
+                    }
+                )
+
+                # Sign-in
+                rv = c.post(
+                    '/checkout/sign-in', data={
+                        'email': 'new@example.com',
+                        'checkout_mode': 'guest',
+                    }
+                )
+
+                address_data = {
+                    'name': 'Sharoon Thomas',
+                    'street': 'Biscayne Boulevard',
+                    'streetbis': 'Apt. 1906, Biscayne Park',
+                    'zip': 'FL33137',
+                    'city': 'Miami',
+                    'country': country.id,
+                    'subdivision': subdivision.id,
+                }
+                # Shipping address page gets rendered
+                rv = c.post(
+                    '/checkout/shipping-address',
+                    data=address_data
+                )
+                self.assertEqual(rv.status_code, 302)
+                self.assertTrue(
+                    rv.location.endswith('/checkout/validate-address')
+                )
+
+                # Post to delivery-address with same flag
+                rv = c.post(
+                    '/checkout/billing-address',
+                    data={'use_shipment_address': 'True'}
+                )
+                self.assertEqual(rv.status_code, 302)
+                self.assertTrue(
+                    rv.location.endswith('/checkout/payment')
+                )
+
+                rv = c.get('/checkout/billing-address')
+                render_obj = Checkout.billing_address()
+                self.assertTrue(render_obj)
+
+                self.assertTrue(render_obj.context['address_form'])
+                address_form = render_obj.context['address_form']
+                self.assertEqual(address_form.name.data, address_data['name'])
+                self.assertEqual(
+                    address_form.street.data, address_data['street'])
+                self.assertEqual(address_form.city.data, address_data['city'])
+                self.assertEqual(
+                    address_form.country.data, address_data['country'])
 
 
 class TestCheckoutPayment(BaseTestCheckout):
