@@ -3,7 +3,7 @@
 
     nereid_checkout test address
 
-    :copyright: (c) 2014 by Openlabs Technologies & Consulting (P) Ltd.
+    :copyright: (c) 2015 by Openlabs Technologies & Consulting (P) Ltd.
     :license: GPLv3, see LICENSE for more details
 '''
 import unittest
@@ -29,7 +29,6 @@ class TestAddress(NereidTestCase):
         self.nereid_website_obj = POOL.get('nereid.website')
         self.nereid_website_locale_obj = POOL.get('nereid.website.locale')
         self.nereid_user_obj = POOL.get('nereid.user')
-        self.url_map_obj = POOL.get('nereid.url_map')
         self.company_obj = POOL.get('company.company')
         self.currency_obj = POOL.get('currency.currency')
         self.language_obj = POOL.get('ir.lang')
@@ -93,6 +92,8 @@ class TestAddress(NereidTestCase):
             'name': '%s' % date.year,
             'code': 'account.invoice',
             'company': company,
+            'prefix': 'ab',
+            'suffix': 'op',
         }])
         fiscal_year, = FiscalYear.create([{
             'name': '%s' % date.year,
@@ -212,7 +213,6 @@ class TestAddress(NereidTestCase):
         self.create_countries()
         self.available_countries = self.country_obj.search([], limit=5)
 
-        url_map_id, = self.url_map_obj.search([], limit=1)
         en_us, = self.language_obj.search([('code', '=', 'en_US')])
         currency, = self.currency_obj.search([('code', '=', 'USD')])
         locale, = self.nereid_website_locale_obj.create([{
@@ -243,7 +243,6 @@ class TestAddress(NereidTestCase):
 
         self.nereid_website_obj.create([{
             'name': 'localhost',
-            'url_map': url_map_id,
             'application_user': USER,
             'shop': self.shop,
             'company': self.company,

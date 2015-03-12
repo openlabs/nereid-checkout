@@ -4,10 +4,11 @@
 
     Payment Gateway Setup
 
-    :copyright: (c) 2013-2014 by Openlabs Technologies & Consulting (P) Ltd.
+    :copyright: (c) 2013-2015 by Openlabs Technologies & Consulting (P) Ltd.
     :license: BSD, see LICENSE for more details
 
 '''
+import time
 import sys
 import re
 import os
@@ -38,9 +39,38 @@ class SQLiteTest(Command):
         if self.distribution.tests_require:
             self.distribution.fetch_build_eggs(self.distribution.tests_require)
 
-        from trytond.config import CONFIG
-        CONFIG['db_type'] = 'sqlite'
+        os.environ['TRYTOND_DATABASE_URI'] = 'sqlite://'
         os.environ['DB_NAME'] = ':memory:'
+
+        from tests import suite
+        test_result = unittest.TextTestRunner(verbosity=3).run(suite())
+
+        if test_result.wasSuccessful():
+            sys.exit(0)
+        sys.exit(-1)
+
+
+class PostgresTest(Command):
+    """
+    Run the tests on Postgres.
+    """
+    description = "Run tests on Postgresql"
+
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        if self.distribution.tests_require:
+            self.distribution.fetch_build_eggs(self.distribution.tests_require)
+
+        os.environ['TRYTOND_DATABASE_URI'] = 'postgresql://'
+
+        os.environ['DB_NAME'] = 'test_' + str(int(time.time()))
 
         from tests import suite
         test_result = unittest.TextTestRunner(verbosity=3).run(suite())
@@ -97,10 +127,11 @@ setup(
         'trytond.modules.%s.tests' % MODULE,
     ],
     package_data={
-        'trytond.modules.%s' % MODULE: info.get('xml', [])
-        + info.get('translation', [])
-        + ['tryton.cfg', 'locale/*.po', 'tests/*.rst', '*.odt']
-        + ['view/*.xml'],
+        'trytond.modules.%s' % MODULE:
+            info.get('xml', []) +
+            info.get('translation', []) +
+            ['tryton.cfg', 'locale/*.po', 'tests/*.rst', '*.odt'] +
+            ['view/*.xml'],
     },
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -134,5 +165,6 @@ setup(
     ],
     cmdclass={
         'test': SQLiteTest,
+        'test_on_postgres': PostgresTest,
     },
 )
