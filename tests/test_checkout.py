@@ -103,7 +103,6 @@ class BaseTestCheckout(BaseTestCase):
         # Create product category
         category, = self.Category.create([{
             'name': 'Test Category',
-            'uri': 'prodcat',
         }])
 
         account_revenue, = self.Account.search([
