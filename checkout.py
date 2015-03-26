@@ -48,6 +48,19 @@ class Cart:
         """
         return self.website.alternate_payment_methods
 
+    def _clear_cart(self):
+        """
+        This version of `_clear_cart()` checks if any sale payments are present
+        in the Sale which is to be deleted. If there are, those are deleted
+        before the Sale itself is deleted.
+        """
+        SalePayment = Pool().get('sale.payment')
+
+        if self.sale and self.sale.payments:
+            SalePayment.delete(self.sale.payments)
+
+        super(Cart, self)._clear_cart()
+
 
 def not_empty_cart(function):
     """
