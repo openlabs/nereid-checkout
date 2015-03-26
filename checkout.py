@@ -48,6 +48,19 @@ class Cart:
         """
         return self.website.alternate_payment_methods
 
+    def _clear_cart(self):
+        """
+        This version of `_clear_cart()` checks if any sale payments are present
+        in the Sale which is to be deleted. If there are, those are deleted
+        before the Sale itself is deleted.
+        """
+        SalePayment = Pool().get('sale.payment')
+
+        if self.sale and self.sale.payments:
+            SalePayment.delete(self.sale.payments)
+
+        super(Cart, self)._clear_cart()
+
 
 def not_empty_cart(function):
     """
@@ -122,13 +135,13 @@ class Party:
 
 
 class CreditCardForm(Form):
-    owner = TextField('Full Name on Card', [validators.Required(), ])
+    owner = TextField('Full Name on Card', [validators.DataRequired(), ])
     number = TextField(
-        'Card Number', [validators.Required(), validators.Length(max=20)]
+        'Card Number', [validators.DataRequired(), validators.Length(max=20)]
     )
     expiry_month = SelectField(
         'Card Expiry Month',
-        [validators.Required(), validators.Length(min=2, max=2)],
+        [validators.DataRequired(), validators.Length(min=2, max=2)],
         choices=[
             ('01', _('01-January')),
             ('02', _('02-February')),
@@ -149,12 +162,12 @@ class CreditCardForm(Form):
     year_range = (current_year, current_year + 25)
     expiry_year = SelectField(
         'Card Expiry Year',
-        [validators.Required(), validators.NumberRange(*year_range)],
+        [validators.DataRequired(), validators.NumberRange(*year_range)],
         coerce=int,
     )
     cvv = TextField(
         'CVD/CVV Number',
-        [validators.Required(), validators.Length(min=3, max=4)]
+        [validators.DataRequired(), validators.Length(min=3, max=4)]
     )
     add_card_to_profiles = BooleanField('Save Card')
 
