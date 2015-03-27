@@ -37,7 +37,7 @@ class TestCheckoutPayment(BaseTestCheckout):
         """Process sale and complete payments.
         """
         self.Sale.process(sales)
-        self.Sale.complete_payments()
+        self.Sale.process_all_pending_payments()
 
     def create_payment_profile(self, party, gateway):
         """
@@ -1277,7 +1277,7 @@ class TestCheckoutPayment(BaseTestCheckout):
 
                 with Transaction().set_context(company=self.company.id):
                     self.Sale.process([sale])
-                    self.Sale.complete_payments()
+                    self.Sale.process_all_pending_payments()
 
                 self.assertEqual(sale.payment_total, Decimal('100'))
                 self.assertEqual(sale.payment_available, Decimal('0'))
@@ -1343,7 +1343,7 @@ class TestCheckoutPayment(BaseTestCheckout):
 
                 with Transaction().set_context(company=self.company.id):
                     self.Sale.process([sale])
-                    self.Sale.complete_payments()
+                    self.Sale.process_all_pending_payments()
 
                 self.assertEqual(sale.payment_total, Decimal('100'))
                 self.assertEqual(sale.payment_available, Decimal('0'))
@@ -1406,7 +1406,7 @@ class TestCheckoutPayment(BaseTestCheckout):
 
                 with Transaction().set_context(company=self.company.id):
                     self.Sale.process([sale])
-                    self.Sale.complete_payments()
+                    self.Sale.process_all_pending_payments()
 
                 self.assertEqual(sale.payment_total, Decimal('100'))
                 self.assertEqual(sale.payment_available, Decimal('0'))

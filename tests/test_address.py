@@ -37,7 +37,7 @@ class TestAddress(NereidTestCase):
         self.party_obj = POOL.get('party.party')
         self.address_obj = POOL.get('party.address')
         self.contact_mech_obj = POOL.get('party.contact_mechanism')
-        self.SaleShop = POOL.get('sale.shop')
+        self.SaleChannel = POOL.get('sale.channel')
         self.PriceList = POOL.get('product.price_list')
         self.StockLocation = POOL.get('stock.location')
         self.PaymentTerm = POOL.get('account.invoice.payment_term')
@@ -229,22 +229,34 @@ class TestAddress(NereidTestCase):
             'name': 'Direct',
             'lines': [('create', [{'type': 'remainder'}])]
         }])
+
         with Transaction().set_context(company=self.company.id):
-            self.shop, = self.SaleShop.create([{
-                'name': 'Test Shop',
-                'address': self.company.party.addresses[0].id,
-                'payment_term': self.payment_term,
+            self.channel, = self.SaleChannel.create([{
+                'name': 'Default Channel',
                 'price_list': self.price_list,
+                'invoice_method': 'order',
+                'shipment_method': 'order',
+                'source': 'manual',
+                'create_users': [('add', [USER])],
                 'warehouse': self.StockLocation.search([
-                    ('type', '=', 'warehouse')
-                ])[0],
-                'users': [('add', [self.User(USER)])],
+                         ('type', '=', 'warehouse')
+                     ])[0],
+                'payment_term': self.payment_term,
+                'company': self.company.id,
             }])
+
+        self.User.write(
+            [self.User(USER)], {
+                'main_company': self.company.id,
+                'company': self.company.id,
+                'current_channel': self.channel,
+            }
+        )
 
         self.nereid_website_obj.create([{
             'name': 'localhost',
             'application_user': USER,
-            'shop': self.shop,
+            'channel': self.channel,
             'company': self.company,
             'default_locale': locale,
             'locales': [('add', [locale.id])],
