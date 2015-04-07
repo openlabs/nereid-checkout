@@ -39,14 +39,6 @@ class Sale:
     per_page = 10
 
     @staticmethod
-    def default_payment_authorize_on():
-        return 'manual'
-
-    @staticmethod
-    def default_payment_capture_on():
-        return 'sale_process'
-
-    @staticmethod
     def default_guest_access_code():
         """A guest access code must be written to the guest_access_code of the
         sale order so that it could be accessed without a login
