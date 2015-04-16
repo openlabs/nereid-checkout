@@ -236,7 +236,7 @@ class TestAddress(NereidTestCase):
                 'price_list': self.price_list,
                 'invoice_method': 'order',
                 'shipment_method': 'order',
-                'source': 'manual',
+                'source': 'webshop',
                 'create_users': [('add', [USER])],
                 'warehouse': self.StockLocation.search([
                          ('type', '=', 'warehouse')
