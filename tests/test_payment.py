@@ -12,6 +12,7 @@ from ast import literal_eval
 from decimal import Decimal
 import json
 from datetime import date
+from werkzeug.datastructures import Headers
 
 import trytond.tests.test_tryton
 from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
@@ -1413,6 +1414,58 @@ class TestCheckoutPayment(BaseTestCheckout):
                 self.assertEqual(sale.payment_collected, Decimal('100'))
                 self.assertEqual(sale.payment_captured, Decimal('100'))
                 self.assertEqual(sale.payment_authorized, Decimal('0'))
+
+    def test_3340_regd_new_invalid_credit_card_details(self):
+        "Regd User - Invalid Credit Card Details"
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            with app.test_client() as c:
+                self._create_regd_user_order(c)
+
+            # Define a new payment gateway
+            self._create_auth_net_gateway_for_site()
+
+            with app.test_client() as c:
+                self._create_regd_user_order(c)
+
+                headers = Headers([('Referer', '/checkout/payment')])
+
+                # Try to pay using credit card
+                rv = c.post(
+                    '/checkout/payment',
+                    data={
+                        'owner': 'Joe Blow',
+                        'number': '123456789876543',
+                        'expiry_year': '2018',
+                        'expiry_month': '01',
+                        'cvv': '911',
+                        'add_card_to_profiles': True,
+                    },
+                    headers=headers
+                )
+                # Redirected back to payment page as the card number is
+                # invalid
+                self.assertEqual(rv.status_code, 302)
+                self.assertTrue('/payment' in rv.location)
+
+                # Try to pay using credit card
+                rv = c.post(
+                    '/checkout/payment',
+                    data={
+                        'owner': 'Joe Blow',
+                        'number': '4111111111111111',
+                        'expiry_year': '2015',
+                        'expiry_month': '01',
+                        'cvv': '911',
+                        'add_card_to_profiles': True,
+                    },
+                    headers=headers
+                )
+                # Redirected back to payment page as the card was expired
+                self.assertEqual(rv.status_code, 302)
+                self.assertTrue('/payment' in rv.location)
 
 
 def suite():

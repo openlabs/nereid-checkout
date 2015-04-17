@@ -20,6 +20,7 @@ from nereid import render_template, request, abort, login_required, \
 from nereid.contrib.pagination import Pagination
 from nereid.ctx import has_request_context
 from trytond.transaction import Transaction
+from trytond.exceptions import UserError
 
 from .i18n import _
 
@@ -219,7 +220,11 @@ class Sale:
         payment_wizard.payment_info.gateway = gateway
 
         with Transaction().set_context(active_id=self.id):
-            payment_wizard.transition_add()
+            try:
+                payment_wizard.transition_add()
+            except UserError, e:
+                flash(e.message)
+                abort(redirect(request.referrer))
 
     @route('/order/<int:active_id>/add-comment', methods=['POST'])
     def add_comment_to_sale(self):
