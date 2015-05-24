@@ -671,7 +671,7 @@ class TestCheckoutShippingAddress(BaseTestCheckout):
             addresses = Address.search([
                 ('party', '=', user.party.id)
             ])
-            self.assertEqual(len(addresses), 2)
+            self.assertEqual(len(addresses), 3)
 
             with app.test_client() as c:
                 c.post(
@@ -1158,7 +1158,7 @@ class TestCheckoutBillingAddress(BaseTestCheckout):
             addresses = Address.search([
                 ('party', '=', user.party.id)
             ])
-            self.assertEqual(len(addresses), 2)
+            self.assertEqual(len(addresses), 3)
 
             with app.test_client() as c:
                 c.post(
@@ -1336,7 +1336,7 @@ class TestCheckoutBillingAddress(BaseTestCheckout):
             addresses = Address.search([
                 ('party', '=', user.party.id)
             ])
-            self.assertEqual(len(addresses), 1)
+            self.assertEqual(len(addresses), 2)
 
             with app.test_client() as c:
                 c.post(
