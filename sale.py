@@ -211,6 +211,8 @@ class Sale:
 
         payment_wizard.payment_info.sale = self.id
         payment_wizard.payment_info.party = self.party.id
+        payment_wizard.payment_info.credit_account = \
+            self.party.account_receivable.id
         payment_wizard.payment_info.currency_digits = self.currency_digits
         payment_wizard.payment_info.amount = self._get_amount_to_checkout()
         payment_wizard.payment_info.reference = self.reference
