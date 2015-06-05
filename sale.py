@@ -37,6 +37,10 @@ class Sale:
     #: as yet
     guest_access_code = fields.Char('Guest Access Code')
 
+    #: Order state in which comments are allowed
+    #: See :py:meth:`.add_comment_to_sale` for usage.
+    comment_allowed_states = ['confirmed']
+
     per_page = 10
 
     @staticmethod
@@ -237,7 +241,7 @@ class Sale:
         """
         comment_is_allowed = False
 
-        if self.state not in ['confirmed', 'processing']:
+        if self.state not in self.comment_allowed_states:
             abort(403)
 
         if current_user.is_anonymous():
@@ -254,7 +258,7 @@ class Sale:
             abort(403)
 
         if request.form.get('comment') and not self.comment \
-                and self.state == 'confirmed':
+                and self.state in self.comment_allowed_states:
             self.comment = request.form.get('comment')
             self.save()
             if request.is_xhr:
