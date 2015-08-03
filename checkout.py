@@ -199,7 +199,8 @@ class PaymentForm(Form):
 
 class CheckoutSignInForm(Form):
     "Checkout Sign-In Form"
-    email = TextField(_('e-mail'), [validators.Required(), validators.Email()])
+    email = TextField(
+        _('e-mail'), [validators.DataRequired(), validators.Email()])
     password = PasswordField(_('Password'))
     checkout_mode = RadioField(
         'Checkout Mode', choices=[
